@@ -1,0 +1,87 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llPlayerPcmMain"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+    
+    <com.ring0.ffmpegandroid.ui.PcmView
+        android:id="@+id/vPcm"
+        android:layout_width="fill_parent"
+        android:layout_height="200dp" />
+    <!-- 文件布局 -->
+    <LinearLayout
+        android:id="@+id/llPathMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/tvFileName"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etFileName"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+    <!-- 类型布局 -->
+    <LinearLayout
+        android:id="@+id/llPcmMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/tvPcm"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <Spinner
+            android:id="@+id/spPcmType"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+    <!-- 通道布局 -->
+    <LinearLayout
+        android:id="@+id/llChannelMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/tvChannel"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etChannel"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:inputType="number" />
+    </LinearLayout>
+    <!-- 采样率布局 -->
+    <LinearLayout
+        android:id="@+id/llSampleMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/tvSample"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etSample"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:inputType="number" />
+    </LinearLayout>
+    
+    <Button
+        android:id="@+id/btPlay"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp" />
+</LinearLayout>

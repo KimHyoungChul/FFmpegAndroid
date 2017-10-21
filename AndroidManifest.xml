@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.ring0.ffmpegandroid"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="14"
+        android:maxSdkVersion="21"/>
+    
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.MOUNT_FORMAT_FILESYSTEMS"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.CAMERA"/>
+    
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <!-- ListActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.ListActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- DecoderYuvActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.DecoderYuvActivity"
+            android:label="@string/decoder_yuv_name" >
+        </activity>
+        <!-- DecoderPcmActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.DecoderPcmActivity"
+            android:label="@string/decoder_pcm_name" >
+        </activity>
+        <!-- PlayerYuvActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.PlayerYuvActivity"
+            android:label="@string/player_yuv_name" >
+        </activity>
+        <!-- PlayerPcmActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.PlayerPcmActivity"
+            android:label="@string/player_pcm_name" >
+        </activity>
+    </application>
+
+</manifest>

@@ -1,0 +1,87 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llPlayerYuvMain"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+    
+    <android.opengl.GLSurfaceView
+        android:id="@+id/glSurface"
+        android:layout_width="fill_parent"
+        android:layout_height="200dp" />
+    <!-- 文件布局 -->
+    <LinearLayout
+        android:id="@+id/llPathMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/tvFileName"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etFileName"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+    <!-- 类型布局 -->
+    <LinearLayout
+        android:id="@+id/llYuvMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/tvYuv"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <Spinner
+            android:id="@+id/spYuvType"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+    <!-- 宽布局 -->
+    <LinearLayout
+        android:id="@+id/llWidthMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/tvWidth"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etWidth"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:inputType="number" />
+    </LinearLayout>
+    <!-- 高布局 -->
+    <LinearLayout
+        android:id="@+id/llHeightMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/tvHeight"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etHeight"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:inputType="number" />
+    </LinearLayout>
+    
+    <Button
+        android:id="@+id/btPlay"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp" />
+</LinearLayout>

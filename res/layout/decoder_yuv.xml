@@ -1,0 +1,64 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llDecoderYuvMain"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+    <!-- 文件名 -->
+    <LinearLayout
+        android:id="@+id/llFileNameMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tvFileName"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etFileName"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+    <!-- 路径 -->
+    <LinearLayout
+        android:id="@+id/llFilePathMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tvFilePath"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etFilePath"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+    <!-- 配置 -->
+    <LinearLayout
+        android:id="@+id/llConfigMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+        <EditText
+            android:id="@+id/etFrame"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:inputType="number"/>
+        <Spinner
+            android:id="@+id/spYuvType"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+    
+    <Button
+        android:id="@+id/btDecode"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp" />
+</LinearLayout>
