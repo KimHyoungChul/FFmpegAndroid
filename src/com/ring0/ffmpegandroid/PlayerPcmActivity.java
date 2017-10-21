@@ -99,7 +99,6 @@ public class PlayerPcmActivity extends Activity implements OnClickListener, OnIt
                 FFmpegHelper.FFMPEG_SAMPLE_FMT_S64P
         };
         pcm_idx = 0;
-        OpenSLHelper.init();
     }
 
     @Override
@@ -132,8 +131,9 @@ public class PlayerPcmActivity extends Activity implements OnClickListener, OnIt
         int sample    = Integer.parseInt(tempSample);
         int pcm_value = pcm_type[pcm_idx];
         
+        FileInputStream fis = null;
         try {
-            FileInputStream fis = new FileInputStream(new File(tempFile));
+            fis = new FileInputStream(new File(tempFile));
             int size = fis.available();
             byte[] buffer = new byte[size];
             fis.read(buffer, 0, size);
@@ -144,7 +144,13 @@ public class PlayerPcmActivity extends Activity implements OnClickListener, OnIt
         catch (Exception e) {
             e.printStackTrace();
         }
-        
+        finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                }catch (Exception e) {}
+            }
+        }
     }
     
 }

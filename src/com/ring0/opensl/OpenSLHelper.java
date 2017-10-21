@@ -5,9 +5,5 @@ public class OpenSLHelper {
         System.loadLibrary("openslHelper");
     }
     
-    public static void init() {
-        
-    }
-    
     public static native void opensl_play(byte[] buffer, int size, int channel, int sample, int pcm_type);
 }
