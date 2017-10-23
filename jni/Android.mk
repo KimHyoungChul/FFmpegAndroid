@@ -5,8 +5,10 @@ LOCAL_PATH := $(call my-dir)
 ###############################################################################
 include $(CLEAR_VARS)
 LOCAL_MODULE            :=  ffmpegHelper
-LOCAL_SRC_FILES         :=  ffmpegHelper/com_ring0_ffmpeg_FFmpegHelper.cpp
-LOCAL_C_INCLUDES        :=  $(LOCAL_PATH)/ffmpeg-3.3.4/android/$(TARGET_ARCH_ABI)/include
+LOCAL_SRC_FILES         :=  ffmpegHelper/com_ring0_ffmpeg_FFmpegHelper.cpp \
+                            ffmpegHelper/yuv/simple_yuv.cpp
+LOCAL_C_INCLUDES        :=  $(LOCAL_PATH)/ffmpeg-3.3.4/android/$(TARGET_ARCH_ABI)/include \
+                            $(LOCAL_PATH)/ffmpegHelper/yuv
 LOCAL_LDLIBS            +=  -L$(SYSROOT)/usr/lib -llog -lm -lz -Wl,-s
 LOCAL_CFLAGS            +=  -fvisibility=hidden
 LOCAL_SHARED_LIBRARIES  :=  ffmpeg

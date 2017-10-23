@@ -1,4 +1,6 @@
 #include "com_ring0_ffmpeg_FFmpegHelper.h"
+#include "simple_yuv.h"
+
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
@@ -35,6 +37,9 @@ extern "C" {
 #define FFMPEG_SAMPLE_FMT_DBLP 10
 #define FFMPEG_SAMPLE_FMT_S64P 11
 
+/**
+ *  返回 ffmpeg 中的像素格式
+ */
 AVPixelFormat get_yuv_type(int yuv_type) {
     AVPixelFormat format = AV_PIX_FMT_NONE;
     switch (yuv_type) {
@@ -68,7 +73,9 @@ AVPixelFormat get_yuv_type(int yuv_type) {
     }
     return format;
 }
-
+/**
+ *  返回 ffmpeg 中的采样格式
+ */
 AVSampleFormat get_pcm_type(int pcm_type) {
     AVSampleFormat format = AV_SAMPLE_FMT_NONE;
     switch (pcm_type) {
@@ -111,7 +118,9 @@ AVSampleFormat get_pcm_type(int pcm_type) {
     }
     return format;
 }
-
+/**
+ *  返回 ffmpeg 的像素描述字符串
+ */
 char* get_yuv_char(int yuv_type) {
     char *result = 0;
     switch (yuv_type) {
@@ -145,7 +154,9 @@ char* get_yuv_char(int yuv_type) {
     }
     return result;
 }
-
+/**
+ *  返回 ffmepg 采样字符串
+ */
 char* get_pcm_char(int pcm_type) {
     char* result = 0;
     switch (pcm_type) {
@@ -188,7 +199,9 @@ char* get_pcm_char(int pcm_type) {
     }
     return result;
 }
-
+/**
+ *  将媒体文件分离出 yuv 像素数据
+ */
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_decoderVideoToYuv
   (JNIEnv *env, jclass, jstring jfilename, jstring jpath, jint frame, jint yuv_type) {
     if (!jfilename) {
@@ -291,7 +304,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_decoderVideoToYuv
     env->ReleaseStringUTFChars(jfilename, filename);
     env->ReleaseStringUTFChars(jpath, path);
 }
-
+/**
+ *  将媒体文件分理出 pcm 采样数据
+ */
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_decoderAudioToPcm
   (JNIEnv *env, jclass, jstring jfilename, jstring jpath, jint frame, jint channel, jint sample, jint pcm_type) {
     if (!jfilename) {
@@ -391,4 +406,69 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_decoderAudioToPcm
     swr_close(pSwrCtx);
     env->ReleaseStringUTFChars(jfilename, filename);
     env->ReleaseStringUTFChars(jpath, path);
+}
+/**
+ *  将 yuv420p 分离出 y u v 三分量
+ */
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1split
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *path = (char*)env->GetStringUTFChars(jpath, 0);
+
+    simple_yuv420p_split(srcfile, path, width, height);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jpath, path);
+}
+/**
+ *  将 yuv444p 分离出 y u v 三分量
+ */
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv444p_1split
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *path = (char*)env->GetStringUTFChars(jpath, 0);
+
+    simple_yuv444p_split(srcfile, path, width, height);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jpath, path);
+}
+/**
+ *  将 yuv420p 像素数据的亮度减半
+ */
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1half
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_yuv420p_half(srcfile, dstfile, width, height);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+/**
+ *  将 yuv420p 像素数据去掉颜色
+ */
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1gray
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_yuv420p_gray(srcfile, dstfile, width, height);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+/**
+ *  将 yuv420p 加上边框
+ */
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1board
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile, jint board, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_yuv420p_board(srcfile, dstfile, board, width, height);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
 }

@@ -14,6 +14,20 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_decoderVideoToYuv
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_decoderAudioToPcm
   (JNIEnv *, jclass, jstring, jstring, jint, jint, jint, jint);
 
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1split
+  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv444p_1split
+  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1half
+  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1gray
+  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1board
+  (JNIEnv *, jclass, jstring, jstring, jint, jint, jint);
 #ifdef __cplusplus
 }
 #endif

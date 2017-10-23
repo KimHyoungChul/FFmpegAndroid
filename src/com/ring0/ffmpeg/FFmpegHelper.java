@@ -41,4 +41,15 @@ public class FFmpegHelper {
     // frame: 解码帧数
     // pcm_type: pcm 格式
     public static native void decoderAudioToPcm(String filename, String path, int frame, int channel, int sample_rate, int pcm_type);
+    
+    // yuv420p 分离为 y u v 三分量
+    public static native void simple_yuv420p_split(String srcfile, String path, int width, int height);
+    // yuv444p 分离为 y u v 三分量
+    public static native void simple_yuv444p_split(String srcfile, String path, int width, int height);
+    // yuv420p 亮度减半
+    public static native void simple_yuv420p_half(String srcfile, String dstfile, int width, int height);
+    // yuv420p 去掉颜色
+    public static native void simple_yuv420p_gray(String srcfile, String dstfile, int width, int height);
+    // yuv420p 加上边框
+    public static native void simple_yuv420p_board(String srcfile, String dstfile, int board, int width, int height);
 }
