@@ -28,6 +28,19 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1gray
 
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1board
   (JNIEnv *, jclass, jstring, jstring, jint, jint, jint);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1graybar
+  (JNIEnv *, jclass, jstring, jint, jint, jint);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1psnr
+  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1split
+  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1bmp
+  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+
 #ifdef __cplusplus
 }
 #endif

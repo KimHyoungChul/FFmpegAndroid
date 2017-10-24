@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #ifndef __SIMPLE_YUV__
 #define __SIMPLE_YUV__
@@ -12,7 +13,10 @@ void simple_yuv444p_split(char*, char*, int, int);
 void simple_yuv420p_half (char*, char*, int, int);
 void simple_yuv420p_gray (char*, char*, int, int);
 void simple_yuv420p_board(char*, char*, int, int, int);
-
+void simple_yuv420p_graybar(char*, int, int, int);
+void simple_yuv420p_psnr(char*, char*, int, int);
+void simple_rgb24_split(char*, char*, int, int);
+void simple_rgb24_bmp(char*, char*, int, int);
 }
 
 #endif

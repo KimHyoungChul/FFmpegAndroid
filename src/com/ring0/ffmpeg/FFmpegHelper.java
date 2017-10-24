@@ -52,4 +52,12 @@ public class FFmpegHelper {
     public static native void simple_yuv420p_gray(String srcfile, String dstfile, int width, int height);
     // yuv420p 加上边框
     public static native void simple_yuv420p_board(String srcfile, String dstfile, int board, int width, int height);
+    // 生成 yuv420p 灰阶图
+    public static native void simple_yuv420p_graybar(String dstfile, int barsize, int width, int height);
+    // 计算两个 yuv420p 的 psnr
+    public static native void simple_yuv420p_psnr(String srcfile, String dstfile, int width, int height);
+    // 将 rgb24 分离为 r g b 三分量
+    public static native void simple_rgb24_split(String srcfile, String path, int width, int height);
+    // 将 rgb24 封装为 bmp 文件
+    public static native void simple_rgb24_bmp(String srcfile, String dstfile, int width, int height);
 }

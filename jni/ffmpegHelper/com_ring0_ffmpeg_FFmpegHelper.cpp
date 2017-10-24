@@ -472,3 +472,53 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1board
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jdstfile, dstfile);
 }
+/**
+ *  生成 yuv420p 灰阶图
+ */
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1graybar
+  (JNIEnv * env, jclass, jstring jdstfile, jint barsize, jint width, jint height) {
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_yuv420p_graybar(dstfile, barsize, width, height);
+
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+/**
+ *  计算两个 yuv420p 的 psnr
+ */
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1psnr
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_yuv420p_psnr(srcfile, dstfile, width, height);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+/**
+ *  将 rgb24 分离为 r g b 三分量
+ */
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1split
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *path = (char*)env->GetStringUTFChars(jpath, 0);
+
+    simple_rgb24_split(srcfile, path, width, height);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jpath, path);
+}
+/**
+ *  将 rgb24 封装为 bmp 文件
+ */
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1bmp
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_rgb24_bmp(srcfile, dstfile, width, height);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
