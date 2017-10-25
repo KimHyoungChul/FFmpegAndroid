@@ -7,6 +7,11 @@
     <string name="decoder_pcm_name">ffmpeg 解码为 pcm</string>
     <string name="player_yuv_name">yuv 浏览器</string>
     <string name="player_pcm_name">pcm 浏览器</string>
+    <string name="simple_yuv_name">简单的 yuv + rgb 例子</string>
+    <string name="simple_yuv420p_split_name">分离 yuv420p</string>
+    <string name="simple_yuv444p_split_name">分离 yuv444p</string>
+    <string name="simple_yuv420p_half_name">yuv420p 亮度减半</string>
+    <string name="simple_yuv420p_gray_name">yuv420p 去掉色度</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -57,7 +62,54 @@
     <string name="player_pcm_toast_filename">请输入要显示的 pcm 文件</string>
     <string name="player_pcm_toast_channel">请输入要解码的通道数</string>
     <string name="player_pcm_toast_sample">请输入要解码的采样率</string>
-    
+    <!-- SimpleYuv420pSplitActivity -->
+    <string name="simple_yuv420p_split_filename">文件名</string>
+    <string name="simple_yuv420p_split_filepath">保存路径</string>
+    <string name="simple_yuv420p_split_filename_hint">这里填入要分离的文件</string>
+    <string name="simple_yuv420p_split_filepath_hint">这里填入分离后保存的路径</string>
+    <string name="simple_yuv420p_split_width">宽</string>
+    <string name="simple_yuv420p_split_height">高</string>
+    <string name="simple_yuv420p_split_start">开始</string>
+    <string name="simple_yuv420p_split_toast_filename">请输入要分离文件</string>
+    <string name="simple_yuv420p_split_toast_filepath">请输入分离后保存的路径</string>
+    <string name="simple_yuv420p_split_toast_width">请输入宽</string>
+    <string name="simple_yuv420p_split_toast_height">请输入高</string>
+    <!-- SimpleYuv444pSplitActivity -->
+    <string name="simple_yuv444p_split_filename">文件名</string>
+    <string name="simple_yuv444p_split_filepath">保存路径</string>
+    <string name="simple_yuv444p_split_filename_hint">这里填入要分离的文件</string>
+    <string name="simple_yuv444p_split_filepath_hint">这里填入分离后保存的路径</string>
+    <string name="simple_yuv444p_split_width">宽</string>
+    <string name="simple_yuv444p_split_height">高</string>
+    <string name="simple_yuv444p_split_start">开始</string>
+    <string name="simple_yuv444p_split_toast_filename">请输入要分离文件</string>
+    <string name="simple_yuv444p_split_toast_filepath">请输入分离后保存的路径</string>
+    <string name="simple_yuv444p_split_toast_width">请输入宽</string>
+    <string name="simple_yuv444p_split_toast_height">请输入高</string>
+    <!-- SimpleYuv420pHalfActivity -->
+    <string name="simple_yuv420p_half_srcfile">源文件</string>
+    <string name="simple_yuv420p_half_dstfile">目标文件</string>
+    <string name="simple_yuv420p_half_srcfile_hint">这里填入源文件</string>
+    <string name="simple_yuv420p_half_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_yuv420p_half_width">宽</string>
+    <string name="simple_yuv420p_half_height">高</string>
+    <string name="simple_yuv420p_half_start">开始</string>
+    <string name="simple_yuv420p_half_toast_srcfile">请输入要去亮度的文件</string>
+    <string name="simple_yuv420p_half_toast_dstfile">请输入去掉亮度的目标文件</string>
+    <string name="simple_yuv420p_half_toast_width">请输入宽</string>
+    <string name="simple_yuv420p_half_toast_height">请输入高</string>
+    <!-- SimpleYuv420pGrayActivity -->
+    <string name="simple_yuv420p_gray_srcfile">源文件</string>
+    <string name="simple_yuv420p_gray_dstfile">目标文件</string>
+    <string name="simple_yuv420p_gray_srcfile_hint">这里填入源文件</string>
+    <string name="simple_yuv420p_gray_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_yuv420p_gray_width">宽</string>
+    <string name="simple_yuv420p_gray_height">高</string>
+    <string name="simple_yuv420p_gray_start">开始</string>
+    <string name="simple_yuv420p_gray_toast_srcfile">请输入要源文件的文件</string>
+    <string name="simple_yuv420p_gray_toast_dstfile">请输入去掉颜色的目标文件</string>
+    <string name="simple_yuv420p_gray_toast_width">请输入宽</string>
+    <string name="simple_yuv420p_gray_toast_height">请输入高</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -93,5 +145,19 @@
         <item>fltp</item>
         <item>dblp</item>
         <item>s64p</item>
+    </string-array>
+    
+    <string-array name="simple_yuv_list">
+        <item>分离 yuv420p</item>
+        <item>分离 yuv444p</item>
+        <item>将 yuv420p 亮度减半</item>
+        <item>将 yuv420p 去掉色度</item>
+        <item>将 yuv420p 加上边框</item>
+        <item>生成 yuv420p 灰度图</item>
+        <item>计算 yuv420p psnr</item>
+        <item>分离 rgb24</item>
+        <item>将 rgb24 保存为 bmp</item>
+        <item>将 rgb24 转换为 yuv420p</item>
+        <item>生成 rgb24 彩条图</item>
     </string-array>
 </resources>

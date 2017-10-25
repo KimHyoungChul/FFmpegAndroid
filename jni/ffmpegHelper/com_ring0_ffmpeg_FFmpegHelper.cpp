@@ -280,11 +280,20 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_decoderVideoToYuv
                         sprintf(yuv_file, "%s/%s_%dx%d_%d.yuv",
                                 path, get_yuv_char(yuv_type), width, height, dec_cnt);
                         // 保存视频像素数据
-                        FILE *f = fopen(yuv_file, "wb+");
-                        fwrite(pDst->data[0], 1, width * height, f);
-                        fwrite(pDst->data[1], 1, (width * height) / 4, f);
-                        fwrite(pDst->data[2], 1, (width * height) / 4, f);
-                        fclose(f);
+                        if (pix_fmt == AV_PIX_FMT_YUV420P) {
+                            FILE *f = fopen(yuv_file, "wb+");
+                            fwrite(pDst->data[0], 1, width * height, f);
+                            fwrite(pDst->data[1], 1, (width * height) / 4, f);
+                            fwrite(pDst->data[2], 1, (width * height) / 4, f);
+                            fclose(f);
+                        }
+                        else if (pix_fmt == AV_PIX_FMT_YUV444P) {
+                            FILE *f = fopen(yuv_file, "wb+");
+                            fwrite(pDst->data[0], 1, width * height, f);
+                            fwrite(pDst->data[1], 1, width * height, f);
+                            fwrite(pDst->data[2], 1, width * height, f);
+                            fclose(f);
+                        }
                         free(yuv_file);
                     }
                     else {
@@ -520,5 +529,25 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1bmp
     simple_rgb24_bmp(srcfile, dstfile, width, height);
 
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1yuv420p
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_rgb24_yuv420p(srcfile, dstfile, width, height);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1colorbar
+  (JNIEnv *env, jclass, jstring jdstfile, jint barsize, jint width, jint height) {
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_rgb24_colorbar(dstfile, barsize, width, height);
+
     env->ReleaseStringUTFChars(jdstfile, dstfile);
 }

@@ -17,6 +17,8 @@ void simple_yuv420p_graybar(char*, int, int, int);
 void simple_yuv420p_psnr(char*, char*, int, int);
 void simple_rgb24_split(char*, char*, int, int);
 void simple_rgb24_bmp(char*, char*, int, int);
+void simple_rgb24_yuv420p(char*, char*, int, int);
+void simple_rgb24_colorbar(char*, int, int, int);
 }
 
 #endif

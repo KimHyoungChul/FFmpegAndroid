@@ -51,6 +51,31 @@
             android:name="com.ring0.ffmpegandroid.PlayerPcmActivity"
             android:label="@string/player_pcm_name" >
         </activity>
+        <!-- SimpleYuvActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuvActivity"
+            android:label="@string/simple_yuv_name" >
+        </activity>
+        <!-- SimpleYuv420pSplitActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv420pSplitActivity"
+            android:label="@string/simple_yuv420p_split_name" >
+        </activity>
+        <!-- SimpleYuv444pSplitActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv444pSplitActivity"
+            android:label="@string/simple_yuv444p_split_name" >
+        </activity>
+        <!-- SimpleYuv420pHalfActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv420pHalfActivity"
+            android:label="@string/simple_yuv420p_half_name" >
+        </activity>
+        <!-- SimpleYuv420pGrayActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv420pGrayActivity"
+            android:label="@string/simple_yuv420p_gray_name" >
+        </activity>
     </application>
 
 </manifest>

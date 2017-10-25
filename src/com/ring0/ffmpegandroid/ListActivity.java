@@ -2,18 +2,14 @@ package com.ring0.ffmpegandroid;
 
 import java.util.Vector;
 
-import com.ring0.ffmpeg.FFmpegHelper;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -120,8 +116,13 @@ public class ListActivity extends Activity implements View.OnClickListener {
         case 3: // pcm 浏览器
             intent = new Intent(this, PlayerPcmActivity.class);
             startActivity(intent);
+            break;
         case 4: // simple yuv demo
+            intent = new Intent(this, SimpleYuvActivity.class);
+            startActivity(intent);
+            break;
         case 5: // simple pcm demo
+            break;
         }
     }
 }

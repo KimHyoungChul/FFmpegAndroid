@@ -41,6 +41,12 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1split
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1bmp
   (JNIEnv *, jclass, jstring, jstring, jint, jint);
 
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1yuv420p
+  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1colorbar
+  (JNIEnv *, jclass, jstring, jint, jint, jint);
+
 #ifdef __cplusplus
 }
 #endif

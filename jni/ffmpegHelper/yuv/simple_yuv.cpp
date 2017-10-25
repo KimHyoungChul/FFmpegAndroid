@@ -257,3 +257,74 @@ void simple_rgb24_bmp(char* srcfile, char* dstfile, int width, int height) {
     fclose(file_bmp);
     free(rgb);
 }
+
+unsigned char fix(unsigned char value, unsigned char max, unsigned char min) {
+    if (value > max) {
+        return max;
+    }
+    else if (value < max) {
+        return min;
+    }
+    else {
+        return value;
+    }
+}
+// rgb24 转 yuv420p
+void simple_rgb24_yuv420p(char* srcfile, char* dstfile, int width, int height) {
+    // 打开文件并且读取数据
+    FILE *file_rgb = fopen(srcfile, "rb+");
+    FILE *file_yuv = fopen(dstfile, "wb+");
+    unsigned char *rgb = (unsigned char*)malloc(width * height * 3);
+    unsigned char *yuv = (unsigned char*)malloc(width * height * 3 / 2);
+    fread(rgb, 1, width * height * 3, file_rgb);
+    memset(yuv, 0, width * height * 3 / 2);
+    // 生成 yuv 数据
+    unsigned char *ptrY, *ptrU, *ptrV, *ptrRGB;
+    unsigned char r, g, b, y, u, v;
+    ptrY = yuv;
+    ptrU = yuv + (width * height);
+    ptrV = ptrU + ((width * height) / 4);
+    for (int i = 0; i < height; i++) {
+        ptrRGB = rgb + (i * width * 3);
+        for (int j = 0; j < width; j++) {
+            r = *(ptrRGB++);
+            g = *(ptrRGB++);
+            b = *(ptrRGB++);
+            y = (unsigned char)((66 * r + 129 * g + 25 * b + 128) >> 8) + 16;
+            u = (unsigned char)((-38 * r - 74 * g - 18 * b + 128) >> 8) + 128;
+            v = (unsigned char)((112 * r - 97 * g - 18 * b + 128) >> 8) + 128;
+            *(ptrY++) = fix(y, 0, 255);
+            if ((i % 2 == 0) && (j & 2 == 0)) {
+                *(ptrU++) = fix(u, 0, 255);
+            }
+            else if (j % 2 == 0) {
+                *(ptrV++) = fix(v, 0, 255);
+            }
+        }
+    }
+    // 写入数据
+    fwrite(file_yuv, 1, width * height * 3 / 2, file_yuv);
+    fclose(file_rgb);
+    fclose(file_yuv);
+    free(rgb);
+    free(yuv);
+}
+// 生成 rgb24 彩条图
+void simple_rgb24_colorbar(char* dstfile, int barsize, int width, int height) {
+    FILE *file_rgb = fopen(dstfile, "wb+");
+    char *rgb = (char*)malloc(width * height * 3);
+
+    int bar_width = width / barsize;
+    int bar_color = 255 / barsize;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int step = j / bar_width;
+            rgb[(i * width + j) * 3 + 0] = bar_color * step;
+            rgb[(i * width + j) * 3 + 1] = bar_color * step;
+            rgb[(i * width + j) * 3 + 2] = bar_color * step;
+        }
+    }
+    fwrite(rgb, 1, width * height * 3, file_rgb);
+    fclose(file_rgb);
+    free(rgb);
+}

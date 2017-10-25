@@ -60,4 +60,8 @@ public class FFmpegHelper {
     public static native void simple_rgb24_split(String srcfile, String path, int width, int height);
     // 将 rgb24 封装为 bmp 文件
     public static native void simple_rgb24_bmp(String srcfile, String dstfile, int width, int height);
+    // rgb24 转 yuv420p
+    public static native void simple_rgb24_yuv420p(String srcfile, String dstfile, int width, int height);
+    // 生成 rgb24 彩条图
+    public static native void simple_rgb24_colorbar(String dstfile, int barsize, int width, int height);
 }
