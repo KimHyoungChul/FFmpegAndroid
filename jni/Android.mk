@@ -14,33 +14,33 @@ LOCAL_CFLAGS            +=  -fvisibility=hidden
 LOCAL_SHARED_LIBRARIES  :=  ffmpeg
 include $(BUILD_SHARED_LIBRARY)
 ###############################################################################
-#		openglHelper
-#		author:zd
+#       openglHelper
+#       author:zd
 ###############################################################################
 include $(CLEAR_VARS)
-LOCAL_MODULE		:=	openglHelper
-LOCAL_SRC_FILES		:=	openglHelper/com_ring0_opengl_OpenGLHelper.cpp
-LOCAL_ARM_MODE		:=	arm
-LOCAL_CFLAGS			+=	-fvisibility=hidden
-LOCAL_LDLIBS		:=	-llog -landroid -lm -lz -lGLESv2
+LOCAL_MODULE            :=  openglHelper
+LOCAL_SRC_FILES         :=  openglHelper/com_ring0_opengl_OpenGLHelper.cpp
+LOCAL_ARM_MODE          :=  arm
+LOCAL_CFLAGS            +=  -fvisibility=hidden
+LOCAL_LDLIBS            :=  -llog -landroid -lm -lz -lGLESv2
 include $(BUILD_SHARED_LIBRARY)
 ###############################################################################
-#		openslHelper
-#		author:zd
+#       openslHelper
+#       author:zd
 ###############################################################################
 include $(CLEAR_VARS)
-LOCAL_MODULE		:=	openslHelper
-LOCAL_SRC_FILES		:=	openslHelper/com_ring0_opensl_OpenSLHelper.cpp
-LOCAL_ARM_MODE		:=	arm
-LOCAL_CFLAGS			+=	-fvisibility=hidden
-LOCAL_LDLIBS		:=	-llog -landroid -lm -lz -lOpenSLES
+LOCAL_MODULE            :=  openslHelper
+LOCAL_SRC_FILES         :=  openslHelper/com_ring0_opensl_OpenSLHelper.cpp
+LOCAL_ARM_MODE          :=  arm
+LOCAL_CFLAGS            +=  -fvisibility=hidden
+LOCAL_LDLIBS            :=  -llog -landroid -lm -lz -lOpenSLES
 include $(BUILD_SHARED_LIBRARY)
 ###############################################################################
 #       ffmpeg
 #       author:zd
 ###############################################################################
 include $(CLEAR_VARS)
-LOCAL_MODULE             :=  ffmpeg
-LOCAL_SRC_FILES          :=  ffmpeg-3.3.4/android/$(TARGET_ARCH_ABI)/libffmpeg.so
-LOCAL_LDLIBS             +=  -L$(SYSROOT)/usr/lib -llog
+LOCAL_MODULE            :=  ffmpeg
+LOCAL_SRC_FILES         :=  ffmpeg-3.3.4/android/$(TARGET_ARCH_ABI)/libffmpeg.so
+LOCAL_LDLIBS            +=  -L$(SYSROOT)/usr/lib -llog
 include $(PREBUILT_SHARED_LIBRARY)
