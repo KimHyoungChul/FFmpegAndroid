@@ -13,8 +13,8 @@ void simple_yuv420p_split(char* srcfile, char* path, int width, int height) {
 
     FILE *file_yuv = fopen(srcfile, "rb+");
     FILE *file_y = fopen(str_y, "wb+");
-    FILE *file_u = fopen(str_y, "wb+");
-    FILE *file_v = fopen(str_y, "wb+");
+    FILE *file_u = fopen(str_u, "wb+");
+    FILE *file_v = fopen(str_v, "wb+");
     fread(pixel, 1, width * height * 3 / 2, file_yuv);
     fwrite(pixel, 1, width * height, file_y);
     fwrite(pixel + (width * height), 1, width * height / 4, file_u);
@@ -42,8 +42,8 @@ void simple_yuv444p_split(char* srcfile, char* path, int width, int height) {
 
     FILE *file_yuv = fopen(srcfile, "rb+");
     FILE *file_y = fopen(str_y, "wb+");
-    FILE *file_u = fopen(str_y, "wb+");
-    FILE *file_v = fopen(str_y, "wb+");
+    FILE *file_u = fopen(str_u, "wb+");
+    FILE *file_v = fopen(str_v, "wb+");
     fread(pixel, 1, width * height * 3, file_yuv);
     fwrite(pixel, 1, width * height, file_y);
     fwrite(pixel + (width * height), 1, width * height, file_u);
