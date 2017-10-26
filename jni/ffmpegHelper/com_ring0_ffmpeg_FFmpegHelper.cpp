@@ -23,6 +23,7 @@ extern "C" {
 #define FFMPEG_PIX_FMT_YUV422P 6
 #define FFMPEG_PIX_FMT_YUV440P 7
 #define FFMPEG_PIX_FMT_YUV444P 8
+#define FFMPEG_PIX_FMT_RGB24   9
 // pcm type
 #define FFMPEG_SAMPLE_FMT_U8   0
 #define FFMPEG_SAMPLE_FMT_S16  1
@@ -69,6 +70,9 @@ AVPixelFormat get_yuv_type(int yuv_type) {
         break;
     case FFMPEG_PIX_FMT_YUV444P:
         format = AV_PIX_FMT_YUV444P;
+        break;
+    case FFMPEG_PIX_FMT_RGB24:
+        format = AV_PIX_FMT_RGB24;
         break;
     }
     return format;
@@ -150,6 +154,9 @@ char* get_yuv_char(int yuv_type) {
         break;
     case FFMPEG_PIX_FMT_YUV444P:
         result = "yuv444p";
+        break;
+    case FFMPEG_PIX_FMT_RGB24:
+        result = "rgb24";
         break;
     }
     return result;
@@ -292,6 +299,11 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_decoderVideoToYuv
                             fwrite(pDst->data[0], 1, width * height, f);
                             fwrite(pDst->data[1], 1, width * height, f);
                             fwrite(pDst->data[2], 1, width * height, f);
+                            fclose(f);
+                        }
+                        else if (pix_fmt == AV_PIX_FMT_RGB24) {
+                            FILE *f = fopen(yuv_file, "wb+");
+                            fwrite(pDst->data[0], 1, width * height * 3, f);
                             fclose(f);
                         }
                         free(yuv_file);

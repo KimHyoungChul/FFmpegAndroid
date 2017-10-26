@@ -16,6 +16,7 @@ public class FFmpegHelper {
     public static final int FFMPEG_PIX_FMT_YUV422P = 6;
     public static final int FFMPEG_PIX_FMT_YUV440P = 7;
     public static final int FFMPEG_PIX_FMT_YUV444P = 8;
+    public static final int FFMPEG_PIX_FMT_RGB24   = 9;
     // pcm type
     public static final int FFMPEG_SAMPLE_FMT_U8   = 0;
     public static final int FFMPEG_SAMPLE_FMT_S16  = 1;

@@ -224,6 +224,7 @@
         <item>yuv422p</item>
         <item>yuv440p</item>
         <item>yuv444p</item>
+        <item>rgb24</item>
     </string-array>
     
     <string-array name="pcm_list">

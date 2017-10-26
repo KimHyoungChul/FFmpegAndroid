@@ -185,7 +185,7 @@ void simple_rgb24_split(char* srcfile, char* path, int width, int height) {
 
     char *rgb = (char*)malloc(width * height * 3);
     fread(rgb, 1, width * height * 3, file_rgb);
-    for (int i = 0; i < width * height; i += 3) {
+    for (int i = 0; i < width * height * 3; i += 3) {
         fwrite(rgb + i + 0, 1, 1, file_r);
         fwrite(rgb + i + 1, 1, 1, file_g);
         fwrite(rgb + i + 2, 1, 1, file_b);
@@ -303,7 +303,7 @@ void simple_rgb24_yuv420p(char* srcfile, char* dstfile, int width, int height) {
         }
     }
     // 写入数据
-    fwrite(file_yuv, 1, width * height * 3 / 2, file_yuv);
+    fwrite(yuv, 1, width * height * 3 / 2, file_yuv);
     fclose(file_rgb);
     fclose(file_yuv);
     free(rgb);

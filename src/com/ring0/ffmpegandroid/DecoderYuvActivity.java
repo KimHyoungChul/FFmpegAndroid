@@ -81,7 +81,8 @@ public class DecoderYuvActivity extends Activity implements OnClickListener, OnI
                 FFmpegHelper.FFMPEG_PIX_FMT_YUV420P,
                 FFmpegHelper.FFMPEG_PIX_FMT_YUV422P,
                 FFmpegHelper.FFMPEG_PIX_FMT_YUV440P,
-                FFmpegHelper.FFMPEG_PIX_FMT_YUV444P
+                FFmpegHelper.FFMPEG_PIX_FMT_YUV444P,
+                FFmpegHelper.FFMPEG_PIX_FMT_RGB24
         };
         yuv_idx = 0;
     }
