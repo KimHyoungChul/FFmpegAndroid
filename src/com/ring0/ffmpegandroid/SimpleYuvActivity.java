@@ -99,41 +99,41 @@ public class SimpleYuvActivity extends Activity implements View.OnClickListener 
         int tag = (Integer)item.getTag(R.id.tvItem);
         Intent intent = null;
         switch (tag) {
-        case 0:
+        case 0: // 分离 yuv420p
             intent = new Intent(this, SimpleYuv420pSplitActivity.class);
             startActivity(intent);
             break;
-        case 1:
+        case 1: // 分离 yuv444p
             intent = new Intent(this, SimpleYuv444pSplitActivity.class);
             startActivity(intent);
             break;
-        case 2:
+        case 2: // yuv420p 亮度减半
             intent = new Intent(this, SimpleYuv420pHalfActivity.class);
             startActivity(intent);
             break;
-        case 3:
+        case 3: // yuv420p 去掉颜色
             intent = new Intent(this, SimpleYuv420pGrayActivity.class);
             startActivity(intent);
             break;
-        case 4:
+        case 4: // yuv420p 加上边框
             intent = new Intent(this, SimpleYuv420pBoardActivity.class);
             startActivity(intent);
             break;
-        case 5:
+        case 5: // 生成 yuv420p 灰阶图
             intent = new Intent(this, SimpleYuv420pGraybarActivity.class);
             startActivity(intent);
             break;
-        case 6:
+        case 6: // 计算两个 yuv420p 的 psnr
+            intent = new Intent(this, SimpleYuv420pPsnrActivity.class);
+            startActivity(intent);
             break;
-        case 7:
+        case 7: // 将 rgb24 分离为 r g b 三分量
             break;
-        case 8:
+        case 8: // 将 rgb24 封装为 bmp 文件
             break;
-        case 9:
+        case 9: // rgb24 转 yuv420p
             break;
-        case 10:
-            break;
-        case 11:
+        case 10: // 生成 rgb24 彩条图
             break;
         }
     }

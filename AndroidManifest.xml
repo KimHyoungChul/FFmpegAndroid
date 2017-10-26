@@ -86,6 +86,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleYuv420pGraybarActivity"
             android:label="@string/simple_yuv420p_graybar_name" >
         </activity>
+        <!-- SimpleYuv420pPsnrActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv420pPsnrActivity"
+            android:label="@string/simple_yuv420p_psnr_name" >
+        </activity>
     </application>
 
 </manifest>

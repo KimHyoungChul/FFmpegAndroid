@@ -14,6 +14,11 @@
     <string name="simple_yuv420p_gray_name">yuv420p 去掉色度</string>
     <string name="simple_yuv420p_board_name">yuv420p 加上边框</string>
     <string name="simple_yuv420p_graybar_name">yuv420p 灰度图</string>
+    <string name="simple_yuv420p_psnr_name">计算 yuv420p psnr</string>
+    <string name="simple_rgb24_split_name">分离 rgb24</string>
+    <string name="simple_rgb24_bmp_name">rgb24 保存为 bmp</string>
+    <string name="simple_rgb24_yuv420p_name">rgb24 转换为 yuv420p</string>
+    <string name="simple_rgb24_colorbar_name">rgb24 彩条图</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -139,7 +144,18 @@
     <string name="simple_yuv420p_graybar_toast_level">请输入级别</string>
     <string name="simple_yuv420p_graybar_toast_width">请输入宽</string>
     <string name="simple_yuv420p_graybar_toast_height">请输入高</string>
-    
+    <!-- SimpleYuv420pPsnrActivity -->
+    <string name="simple_yuv420p_psnr_srcfile">源文件</string>
+    <string name="simple_yuv420p_psnr_dstfile">目标文件</string>
+    <string name="simple_yuv420p_psnr_srcfile_hint">这里填入源文件</string>
+    <string name="simple_yuv420p_psnr_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_yuv420p_psnr_width">宽</string>
+    <string name="simple_yuv420p_psnr_height">高</string>
+    <string name="simple_yuv420p_psnr_start">开始</string>
+    <string name="simple_yuv420p_psnr_toast_srcfile">请输入比较的源文件</string>
+    <string name="simple_yuv420p_psnr_toast_dstfile">请输入比较的目标文件</string>
+    <string name="simple_yuv420p_psnr_toast_width">请输入宽</string>
+    <string name="simple_yuv420p_psnr_toast_height">请输入高</string>
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
         <item>ffmpeg 解码为 pcm</item>
