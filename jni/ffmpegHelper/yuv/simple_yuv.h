@@ -19,6 +19,13 @@ void simple_rgb24_split(char*, char*, int, int);
 void simple_rgb24_bmp(char*, char*, int, int);
 void simple_rgb24_yuv420p(char*, char*, int, int);
 void simple_rgb24_colorbar(char*, int, int, int);
+
+void simple_pcm16le_split(char*, char*);
+void simple_pcm16le_lefthalf(char*, char*);
+void simple_pcm16le_doublespeed(char*, char*);
+void simple_pcm16le_pcm8le(char*, char*);
+void simple_pcm16le_corp(char*, char*, int, int);
+void simple_pcm16le_wave(char*, char*);
 }
 
 #endif

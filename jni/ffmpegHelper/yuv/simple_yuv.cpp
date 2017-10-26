@@ -328,3 +328,153 @@ void simple_rgb24_colorbar(char* dstfile, int barsize, int width, int height) {
     fclose(file_rgb);
     free(rgb);
 }
+
+void simple_pcm16le_split(char* srcfile, char* path) {
+    char *pcm_l = (char*)malloc(sizeof(char) * 1024);
+    char *pcm_r = (char*)malloc(sizeof(char) * 1024);
+    sprintf(pcm_l, "%s/pcm16le_l.pcm", pcm_l);
+    sprintf(pcm_r, "%s/pcm16le_r.pcm", pcm_r);
+    char *sample = (char*)malloc(sizeof(char) * 4);
+
+    FILE *file_pcm = fopen(srcfile, "rb+");
+    FILE *file_l = fopen(pcm_l, "wb+");
+    FILE *file_r = fopen(pcm_r, "wb+");
+    while (!feof(file_pcm)) {
+        fread(sample, 1, 4, file_pcm);
+        fwrite(sample, 1, 2, file_l);
+        fwrite(sample + 2, 1, 2, file_r);
+    }
+    fclose(file_pcm);
+    fclose(file_l);
+    fclose(file_r);
+    free(sample);
+}
+void simple_pcm16le_lefthalf(char* srcfile, char* dstfile) {
+    char *sample = (char*)malloc(sizeof(char) * 4);
+
+    FILE *file_src = fopen(srcfile, "rb+");
+    FILE *file_dst = fopen(dstfile, "wb+");
+    while (!feof(file_src)) {
+        fread(sample, 1, 4, file_src);
+        unsigned short *left = (unsigned short*)sample;
+        *left = *left / 2;
+        fwrite(sample, 1, 4, file_dst);
+    }
+    fclose(file_src);
+    fclose(file_dst);
+    free(sample);
+}
+void simple_pcm16le_doublespeed(char* srcfile, char* dstfile) {
+    char *sample = (char*)malloc(sizeof(char) * 4);
+    FILE *file_src = fopen(srcfile, "rb+");
+    FILE *file_dst = fopen(dstfile, "wb+");
+    int cnt = 0;
+    while (!feof(file_src)) {
+        fread(sample, 1, 4, file_src);
+        if (cnt % 2 == 0) {
+            fwrite(sample, 1, 4, file_dst);
+        }
+        cnt++;
+    }
+    fclose(file_src);
+    fclose(file_dst);
+    free(sample);
+}
+void simple_pcm16le_pcm8le(char* srcfile, char* dstfile) {
+    char *sample = (char*)malloc(sizeof(char) * 4);
+    FILE *file_src = fopen(srcfile, "rb+");
+    FILE *file_dst = fopen(dstfile, "wb+");
+    while (!feof(file_src)) {
+        fread(sample, 1, 4, file_src);
+        short *temp_l = (short*)sample;
+        short *temp_r = (short*)sample + 2;
+        char sample_l = (*temp_l >> 8) + 128;
+        char sample_r = (*temp_r >> 8) + 128;
+        fwrite(&sample_l, 1, 1, file_dst);
+        fwrite(&sample_r, 1, 1, file_dst);
+    }
+    fclose(file_src);
+    fclose(file_dst);
+    free(sample);
+}
+void simple_pcm16le_corp(char* srcfile, char* dstfile, int startpoint, int count) {
+    char *sample = (char*)malloc(sizeof(char) * 4);
+    FILE *file_src = fopen(srcfile, "rb+");
+    FILE *file_dst = fopen(dstfile, "wb+");
+    int cnt = 0;
+    while (!feof(file_src)) {
+        fread(sample, 1, 4, file_src);
+        if (cnt > startpoint && cnt < startpoint + count) {
+            fwrite(sample, 1, 4, file_dst);
+        }
+        cnt++;
+    }
+    fclose(file_src);
+    fclose(file_dst);
+    free(sample);
+}
+void simple_pcm16le_wave(char* srcfile, char* dstfile) {
+    typedef struct wave_header {
+        char fcc_id[4];
+        unsigned long size;
+        char fcc_type[4];
+    };
+
+    typedef struct wave_fmt {
+        char fcc_id[4];
+        unsigned long size;
+        unsigned short format_tag;
+        unsigned short channels;
+        unsigned long sample_per_sec;
+        unsigned long avg_bytes_per_sec;
+        unsigned short block_align;
+        unsigned short bits_per_sample;
+    };
+
+    typedef struct wave_data {
+        char fcc_id[4];
+        unsigned long size;
+    };
+    FILE *file_src = fopen(srcfile, "rb+");
+    FILE *file_dst = fopen(dstfile, "wb+");
+
+    int channels = 2;
+    int sample = 44100;
+    int bits = 16;
+
+    wave_header header = {0};
+    wave_fmt    fmt    = {0};
+    wave_data   data   = {0};
+
+    memcpy(header.fcc_id, "RIFF", 4);
+    memcpy(header.fcc_type, "WAVE", 4);
+    fseek(file_dst, sizeof(wave_header), 1);
+
+    fmt.sample_per_sec = sample;
+    fmt.avg_bytes_per_sec = fmt.sample_per_sec * sizeof(short);
+    fmt.bits_per_sample = bits;
+    memcpy(fmt.fcc_id, "fmt ", 4);
+    fmt.size = 16;
+    fmt.block_align = 2;
+    fmt.channels = channels;
+    fmt.format_tag = 1;
+    fwrite(&fmt, 1, sizeof(wave_fmt), file_dst);
+
+    memcpy(data.fcc_id, "data", 4);
+    data.size = 0;
+    fseek(file_dst, sizeof(wave_data), SEEK_CUR);
+
+    while (!feof(file_src)) {
+        unsigned short samples;
+        fread(&samples, 1, sizeof(unsigned short), file_src);
+        data.size += 2;
+        fwrite(&samples, 1, sizeof(unsigned short), file_dst);
+    }
+    header.size += 44 + data.size;
+    fwrite(&header, 1, sizeof(wave_header), file_dst);
+    fseek(file_dst, sizeof(wave_fmt), SEEK_CUR);
+    fwrite(&data, 1, sizeof(wave_data), file_dst);
+
+    fclose(file_src);
+    fclose(file_dst);
+}

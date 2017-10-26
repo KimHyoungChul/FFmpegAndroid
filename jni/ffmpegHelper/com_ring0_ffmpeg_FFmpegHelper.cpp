@@ -563,3 +563,69 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1rgb24_1colorba
 
     env->ReleaseStringUTFChars(jdstfile, dstfile);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm16le_1split
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *path = (char*)env->GetStringUTFChars(jpath, 0);
+
+    simple_pcm16le_split(srcfile, path);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jpath, path);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm16le_1lefthalf
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_pcm16le_lefthalf(srcfile, dstfile);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm16le_1doublespeed
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_pcm16le_doublespeed(srcfile, dstfile);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm16le_1pcm8le
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_pcm16le_pcm8le(srcfile, dstfile);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm16le_1corp
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile, jint startpoint, jint count) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_pcm16le_corp(srcfile, dstfile, startpoint, count);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm16le_1wave
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    simple_pcm16le_wave(srcfile, dstfile);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}

@@ -65,4 +65,17 @@ public class FFmpegHelper {
     public static native void simple_rgb24_yuv420p(String srcfile, String dstfile, int width, int height);
     // 生成 rgb24 彩条图
     public static native void simple_rgb24_colorbar(String dstfile, int barsize, int width, int height);
+    
+    // 将 pcm16le 分离为 左右声道
+    public static native void simple_pcm16le_split(String srcfile, String path);
+    // 将 pcm16le 左声道音量降低一半
+    public static native void simple_pcm16le_lefthalf(String srcfile, String dstfile);
+    // 将 pcm16le 声音速度提高一倍
+    public static native void simple_pcm16le_doublespeed(String srcfile, String dstfile);
+    // 将 pcm16le 转换为 pcm8le
+    public static native void simple_pcm16le_pcm8le(String srcfile, String dstfile);
+    // 将 pcm16le 截取部分采样
+    public static native void simple_pcm16le_corp(String srcfile, String dstfile, int startpoint, int count);
+    // 将 pcm16le 保存为 wav
+    public static native void simple_pcm16le_wave(String srcfile, String dstfile);
 }
