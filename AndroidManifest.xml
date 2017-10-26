@@ -76,6 +76,16 @@
             android:name="com.ring0.ffmpegandroid.SimpleYuv420pGrayActivity"
             android:label="@string/simple_yuv420p_gray_name" >
         </activity>
+        <!-- SimpleYuv420pBoardActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv420pBoardActivity"
+            android:label="@string/simple_yuv420p_board_name" >
+        </activity>
+        <!-- SimpleYuv420pGraybarActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv420pGraybarActivity"
+            android:label="@string/simple_yuv420p_graybar_name" >
+        </activity>
     </application>
 
 </manifest>

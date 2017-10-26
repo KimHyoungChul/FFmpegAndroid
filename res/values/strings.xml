@@ -12,6 +12,8 @@
     <string name="simple_yuv444p_split_name">分离 yuv444p</string>
     <string name="simple_yuv420p_half_name">yuv420p 亮度减半</string>
     <string name="simple_yuv420p_gray_name">yuv420p 去掉色度</string>
+    <string name="simple_yuv420p_board_name">yuv420p 加上边框</string>
+    <string name="simple_yuv420p_graybar_name">yuv420p 灰度图</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -106,10 +108,37 @@
     <string name="simple_yuv420p_gray_width">宽</string>
     <string name="simple_yuv420p_gray_height">高</string>
     <string name="simple_yuv420p_gray_start">开始</string>
-    <string name="simple_yuv420p_gray_toast_srcfile">请输入要源文件的文件</string>
+    <string name="simple_yuv420p_gray_toast_srcfile">请输入源文件</string>
     <string name="simple_yuv420p_gray_toast_dstfile">请输入去掉颜色的目标文件</string>
     <string name="simple_yuv420p_gray_toast_width">请输入宽</string>
     <string name="simple_yuv420p_gray_toast_height">请输入高</string>
+    <!-- SimpleYuv420pBoardActivity -->
+    <string name="simple_yuv420p_board_srcfile">源文件</string>
+    <string name="simple_yuv420p_board_dstfile">目标文件</string>
+    <string name="simple_yuv420p_board_srcfile_hint">这里填入源文件</string>
+    <string name="simple_yuv420p_board_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_yuv420p_board_board">边框</string>
+    <string name="simple_yuv420p_board_board_hint">请输入边框</string>
+    <string name="simple_yuv420p_board_width">宽</string>
+    <string name="simple_yuv420p_board_height">高</string>
+    <string name="simple_yuv420p_board_start">开始</string>
+    <string name="simple_yuv420p_board_toast_srcfile">请输入源文件</string>
+    <string name="simple_yuv420p_board_toast_dstfile">请输入要加边框的目标文件</string>
+    <string name="simple_yuv420p_board_toast_board">请输入边框大小</string>
+    <string name="simple_yuv420p_board_toast_width">请输入宽</string>
+    <string name="simple_yuv420p_board_toast_height">请输入高</string>
+    <!-- SimpleYuv420pGraybarActivity -->
+    <string name="simple_yuv420p_graybar_dstfile">目标文件</string>
+    <string name="simple_yuv420p_graybar_dstfile_hint">请输入目标文件</string>
+    <string name="simple_yuv420p_graybar_level">级别</string>
+    <string name="simple_yuv420p_graybar_level_hint">请输入级别</string>
+    <string name="simple_yuv420p_graybar_width">宽</string>
+    <string name="simple_yuv420p_graybar_height">高</string>
+    <string name="simple_yuv420p_graybar_start">开始</string>
+    <string name="simple_yuv420p_graybar_toast_dstfile">请输入目标文件</string>
+    <string name="simple_yuv420p_graybar_toast_level">请输入级别</string>
+    <string name="simple_yuv420p_graybar_toast_width">请输入宽</string>
+    <string name="simple_yuv420p_graybar_toast_height">请输入高</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>

@@ -116,8 +116,12 @@ public class SimpleYuvActivity extends Activity implements View.OnClickListener 
             startActivity(intent);
             break;
         case 4:
+            intent = new Intent(this, SimpleYuv420pBoardActivity.class);
+            startActivity(intent);
             break;
         case 5:
+            intent = new Intent(this, SimpleYuv420pGraybarActivity.class);
+            startActivity(intent);
             break;
         case 6:
             break;
