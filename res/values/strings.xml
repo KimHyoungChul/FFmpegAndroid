@@ -156,6 +156,55 @@
     <string name="simple_yuv420p_psnr_toast_dstfile">请输入比较的目标文件</string>
     <string name="simple_yuv420p_psnr_toast_width">请输入宽</string>
     <string name="simple_yuv420p_psnr_toast_height">请输入高</string>
+    <!-- SimpleRgb24SplitActivity -->
+    <string name="simple_rgb24_split_filename">文件名</string>
+    <string name="simple_rgb24_split_filepath">保存路径</string>
+    <string name="simple_rgb24_split_filename_hint">这里填入要分离的文件</string>
+    <string name="simple_rgb24_split_filepath_hint">这里填入分离后保存的路径</string>
+    <string name="simple_rgb24_split_width">宽</string>
+    <string name="simple_rgb24_split_height">高</string>
+    <string name="simple_rgb24_split_start">开始</string>
+    <string name="simple_rgb24_split_toast_filename">请输入要分离文件</string>
+    <string name="simple_rgb24_split_toast_filepath">请输入分离后保存的路径</string>
+    <string name="simple_rgb24_split_toast_width">请输入宽</string>
+    <string name="simple_rgb24_split_toast_height">请输入高</string>
+    <!-- SimpleRgb24BmpActivity -->
+    <string name="simple_rgb24_bmp_srcfile">源文件</string>
+    <string name="simple_rgb24_bmp_dstfile">目标文件</string>
+    <string name="simple_rgb24_bmp_srcfile_hint">这里填入源文件</string>
+    <string name="simple_rgb24_bmp_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_rgb24_bmp_width">宽</string>
+    <string name="simple_rgb24_bmp_height">高</string>
+    <string name="simple_rgb24_bmp_start">开始</string>
+    <string name="simple_rgb24_bmp_toast_srcfile">请输入 rgb24 的文件</string>
+    <string name="simple_rgb24_bmp_toast_dstfile">请输入生成 bmp 的目标文件</string>
+    <string name="simple_rgb24_bmp_toast_width">请输入宽</string>
+    <string name="simple_rgb24_bmp_toast_height">请输入高</string>
+    <!-- SimpleRgb24Yuv420pActivity -->
+    <string name="simple_rgb24_yuv420p_srcfile">源文件</string>
+    <string name="simple_rgb24_yuv420p_dstfile">目标文件</string>
+    <string name="simple_rgb24_yuv420p_srcfile_hint">这里填入源文件</string>
+    <string name="simple_rgb24_yuv420p_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_rgb24_yuv420p_width">宽</string>
+    <string name="simple_rgb24_yuv420p_height">高</string>
+    <string name="simple_rgb24_yuv420p_start">开始</string>
+    <string name="simple_rgb24_yuv420p_toast_srcfile">请输入 rgb24 的文件</string>
+    <string name="simple_rgb24_yuv420p_toast_dstfile">请输入要转换的 yuv420p 目标文件</string>
+    <string name="simple_rgb24_yuv420p_toast_width">请输入宽</string>
+    <string name="simple_rgb24_yuv420p_toast_height">请输入高</string>
+    <!-- SimpleRgb24ColorbarActivity -->
+    <string name="simple_rgb24_colorbar_dstfile">目标文件</string>
+    <string name="simple_rgb24_colorbar_dstfile_hint">请输入目标文件</string>
+    <string name="simple_rgb24_colorbar_level">级别</string>
+    <string name="simple_rgb24_colorbar_level_hint">请输入级别</string>
+    <string name="simple_rgb24_colorbar_width">宽</string>
+    <string name="simple_rgb24_colorbar_height">高</string>
+    <string name="simple_rgb24_colorbar_start">开始</string>
+    <string name="simple_rgb24_colorbar_toast_dstfile">请输入目标文件</string>
+    <string name="simple_rgb24_colorbar_toast_level">请输入级别</string>
+    <string name="simple_rgb24_colorbar_toast_width">请输入宽</string>
+    <string name="simple_rgb24_colorbar_toast_height">请输入高</string>
+    
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
         <item>ffmpeg 解码为 pcm</item>

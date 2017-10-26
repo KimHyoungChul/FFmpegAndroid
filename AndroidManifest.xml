@@ -91,6 +91,26 @@
             android:name="com.ring0.ffmpegandroid.SimpleYuv420pPsnrActivity"
             android:label="@string/simple_yuv420p_psnr_name" >
         </activity>
+        <!-- SimpleRgb24SplitActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleRgb24SplitActivity"
+            android:label="@string/simple_rgb24_split_name" >
+        </activity>
+        <!-- SimpleRgb24BmpActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleRgb24BmpActivity"
+            android:label="@string/simple_rgb24_bmp_name" >
+        </activity>
+        <!-- SimpleRgb24Yuv420pActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleRgb24Yuv420pActivity"
+            android:label="@string/simple_rgb24_yuv420p_name" >
+        </activity>
+        <!-- SimpleRgb24ColorbarActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleRgb24ColorbarActivity"
+            android:label="@string/simple_rgb24_colorbar_name" >
+        </activity>
     </application>
 
 </manifest>

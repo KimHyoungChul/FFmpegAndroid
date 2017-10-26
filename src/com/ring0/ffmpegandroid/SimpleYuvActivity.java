@@ -128,12 +128,20 @@ public class SimpleYuvActivity extends Activity implements View.OnClickListener 
             startActivity(intent);
             break;
         case 7: // 将 rgb24 分离为 r g b 三分量
+            intent = new Intent(this, SimpleRgb24SplitActivity.class);
+            startActivity(intent);
             break;
         case 8: // 将 rgb24 封装为 bmp 文件
+            intent = new Intent(this, SimpleRgb24BmpActivity.class);
+            startActivity(intent);
             break;
         case 9: // rgb24 转 yuv420p
+            intent = new Intent(this, SimpleRgb24Yuv420pActivity.class);
+            startActivity(intent);
             break;
         case 10: // 生成 rgb24 彩条图
+            intent = new Intent(this, SimpleRgb24ColorbarActivity.class);
+            startActivity(intent);
             break;
         }
     }
