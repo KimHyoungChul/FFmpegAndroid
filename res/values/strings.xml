@@ -19,6 +19,13 @@
     <string name="simple_rgb24_bmp_name">rgb24 保存为 bmp</string>
     <string name="simple_rgb24_yuv420p_name">rgb24 转换为 yuv420p</string>
     <string name="simple_rgb24_colorbar_name">rgb24 彩条图</string>
+    <string name="simple_pcm_name">简单的 pcm 例子</string>
+    <string name="simple_pcm16le_split_name">pcm16le 分离为左右声道</string>
+    <string name="simple_pcm16le_lefthalf_name">pcm16le 左声道音量降低一半</string>
+    <string name="simple_pcm16le_doublespeed_name">pcm16le 声音速度提高一倍</string>
+    <string name="simple_pcm16le_pcm8le_name">pcm16le 转换为 pcm8le</string>
+    <string name="simple_pcm16le_corp_name">pcm16le 截取部分采样</string>
+    <string name="simple_pcm16le_wav_name">pcm16le 保存为 wav</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -204,6 +211,58 @@
     <string name="simple_rgb24_colorbar_toast_level">请输入级别</string>
     <string name="simple_rgb24_colorbar_toast_width">请输入宽</string>
     <string name="simple_rgb24_colorbar_toast_height">请输入高</string>
+        <!-- SimplePcm16leSplitActivity -->
+    <string name="simple_pcm16le_split_filename">文件名</string>
+    <string name="simple_pcm16le_split_filepath">保存路径</string>
+    <string name="simple_pcm16le_split_filename_hint">这里填入要分离的 pcm16le 文件</string>
+    <string name="simple_pcm16le_split_filepath_hint">这里填入分离后保存的路径</string>
+    <string name="simple_pcm16le_split_start">开始</string>
+    <string name="simple_pcm16le_split_toast_filename">请输入要分离 pcm16le 文件</string>
+    <string name="simple_pcm16le_split_toast_filepath">请输入分离后保存的路径</string>
+    <!-- SimplePcm16leLefthalfActivity -->
+    <string name="simple_pcm16le_lefthalf_srcfile">源文件</string>
+    <string name="simple_pcm16le_lefthalf_dstfile">目标文件</string>
+    <string name="simple_pcm16le_lefthalf_srcfile_hint">这里填入源文件</string>
+    <string name="simple_pcm16le_lefthalf_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_pcm16le_lefthalf_start">开始</string>
+    <string name="simple_pcm16le_lefthalf_toast_srcfile">请输入要去左音量的文件</string>
+    <string name="simple_pcm16le_lefthalf_toast_dstfile">请输入去左音量的目标文件</string>
+    <!-- SimplePcm16leDoublespeedActivity -->
+    <string name="simple_pcm16le_doublespeed_srcfile">源文件</string>
+    <string name="simple_pcm16le_doublespeed_dstfile">目标文件</string>
+    <string name="simple_pcm16le_doublespeed_srcfile_hint">这里填入源文件</string>
+    <string name="simple_pcm16le_doublespeed_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_pcm16le_doublespeed_start">开始</string>
+    <string name="simple_pcm16le_doublespeed_toast_srcfile">请输入 pcm 的源文件</string>
+    <string name="simple_pcm16le_doublespeed_toast_dstfile">请输入提高速度目标文件</string>
+    <!-- SimplePcm16lePcm8leActivity -->
+    <string name="simple_pcm16le_pcm8le_srcfile">源文件</string>
+    <string name="simple_pcm16le_pcm8le_dstfile">目标文件</string>
+    <string name="simple_pcm16le_pcm8le_srcfile_hint">这里填入源文件</string>
+    <string name="simple_pcm16le_pcm8le_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_pcm16le_pcm8le_start">开始</string>
+    <string name="simple_pcm16le_pcm8le_toast_srcfile">请输入 pcm 的源文件</string>
+    <string name="simple_pcm16le_pcm8le_toast_dstfile">请输入转 pcm8le 的目标文件</string>
+    <!-- SimplePcm16leCorpActivity -->
+    <string name="simple_pcm16le_corp_srcfile">源文件</string>
+    <string name="simple_pcm16le_corp_dstfile">目标文件</string>
+    <string name="simple_pcm16le_corp_srcfile_hint">这里填入源文件</string>
+    <string name="simple_pcm16le_corp_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_pcm16le_corp_startpoint_hint">开始点</string>
+    <string name="simple_pcm16le_corp_count_hint">数量</string>
+    <string name="simple_pcm16le_corp_start">开始</string>
+    <string name="simple_pcm16le_corp_toast_srcfile">请输入 pcm 的源文件</string>
+    <string name="simple_pcm16le_corp_toast_dstfile">请输入截取的目标文件</string>
+    <string name="simple_pcm16le_corp_toast_startpoint">请输入开始点</string>
+    <string name="simple_pcm16le_corp_toast_count">请输入数量</string>
+    <!-- SimplePcm16leWavActivity -->
+    <string name="simple_pcm16le_wav_srcfile">源文件</string>
+    <string name="simple_pcm16le_wav_dstfile">目标文件</string>
+    <string name="simple_pcm16le_wav_srcfile_hint">这里填入源文件</string>
+    <string name="simple_pcm16le_wav_dstfile_hint">这里填入目标文件</string>
+    <string name="simple_pcm16le_wav_start">开始</string>
+    <string name="simple_pcm16le_wav_toast_srcfile">请输入 pcm 的源文件</string>
+    <string name="simple_pcm16le_wav_toast_dstfile">请输入 wav 的目标文件</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -254,5 +313,14 @@
         <item>将 rgb24 保存为 bmp</item>
         <item>将 rgb24 转换为 yuv420p</item>
         <item>生成 rgb24 彩条图</item>
+    </string-array>
+    
+    <string-array name="simple_pcm_list">
+        <item>pcm16le 分离为左右声道</item>
+        <item>pcm16le 左声道音量降低一半</item>
+        <item>pcm16le 声音速度提高一倍</item>
+        <item>pcm16le 转换为 pcm8le</item>
+        <item>pcm16le 截取部分采样</item>
+        <item>pcm16le 保存为 wav</item>
     </string-array>
 </resources>

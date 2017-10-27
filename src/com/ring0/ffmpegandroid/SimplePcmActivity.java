@@ -1,5 +1,6 @@
 package com.ring0.ffmpegandroid;
 
+
 import java.util.Vector;
 
 import android.app.Activity;
@@ -13,21 +14,18 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-/*
- *  功能列表页面
- */
-public class ListActivity extends Activity implements View.OnClickListener {
+public class SimplePcmActivity extends Activity implements View.OnClickListener {
     private ListView lvList = null;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.list_main);
+        setContentView(R.layout.simple_pcm);
         
         lvList = (ListView)findViewById(R.id.lvList);
         lvList.setAdapter(new MyListAdapter(this.getApplicationContext()));
     }
-    
+
     private class MyListAdapter extends BaseAdapter {
         private Context context = null;
         private Vector<String> listVector = null;
@@ -38,7 +36,7 @@ public class ListActivity extends Activity implements View.OnClickListener {
             this.inflater = (LayoutInflater)this.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             this.listVector = new Vector<String>();
             
-            String arrays[] = this.context.getResources().getStringArray(R.array.list);
+            String arrays[] = this.context.getResources().getStringArray(R.array.simple_pcm_list);
             if (arrays != null && arrays.length > 0) {
                 int size = arrays.length;
                 for (int i = 0; i < size; i++) {
@@ -78,7 +76,7 @@ public class ListActivity extends Activity implements View.OnClickListener {
                 convertView.setTag(holder);
                 holder.llItem = convertView;
                 holder.tvItem = (TextView)holder.llItem.findViewById(R.id.tvItem);
-                holder.tvItem.setOnClickListener(ListActivity.this);
+                holder.tvItem.setOnClickListener(SimplePcmActivity.this);
             }
             
             prepareItem(position, this.listVector, holder);
@@ -101,28 +99,28 @@ public class ListActivity extends Activity implements View.OnClickListener {
         int tag = (Integer)item.getTag(R.id.tvItem);
         Intent intent = null;
         switch (tag) {
-        case 0: // ffmpeg 解码为 yuv
-            intent = new Intent(this, DecoderYuvActivity.class);
+        case 0: // pcm16le 分离为左右声道
+            intent = new Intent(this, SimplePcm16leSplitActivity.class);
             startActivity(intent);
             break;
-        case 1: // ffmpeg 解码为 pcm
-            intent = new Intent(this, DecoderPcmActivity.class);
+        case 1: // pcm16le 左声道音量降低一半
+            intent = new Intent(this, SimplePcm16leLefthalfActivity.class);
             startActivity(intent);
             break;
-        case 2: // yuv 浏览器
-            intent = new Intent(this, PlayerYuvActivity.class);
+        case 2: // pcm16le 声音速度提高一倍
+            intent = new Intent(this, SimplePcm16leDoublespeedActivity.class);
             startActivity(intent);
             break;
-        case 3: // pcm 浏览器
-            intent = new Intent(this, PlayerPcmActivity.class);
+        case 3: // pcm16le 转换为 pcm8le
+            intent = new Intent(this, SimplePcm16lePcm8leActivity.class);
             startActivity(intent);
             break;
-        case 4: // simple yuv demo
-            intent = new Intent(this, SimpleYuvActivity.class);
+        case 4: // pcm16le 截取部分采样
+            intent = new Intent(this, SimplePcm16leCorpActivity.class);
             startActivity(intent);
             break;
-        case 5: // simple pcm demo
-            intent = new Intent(this, SimplePcmActivity.class);
+        case 5: // pcm16le 保存为 wav
+            intent = new Intent(this, SimplePcm16leWavActivity.class);
             startActivity(intent);
             break;
         }

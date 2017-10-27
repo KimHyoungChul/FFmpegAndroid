@@ -56,6 +56,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleYuvActivity"
             android:label="@string/simple_yuv_name" >
         </activity>
+        <!-- SimplePcmActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimplePcmActivity"
+            android:label="@string/simple_pcm_name" >
+        </activity>
         <!-- SimpleYuv420pSplitActivity -->
         <activity
             android:name="com.ring0.ffmpegandroid.SimpleYuv420pSplitActivity"
@@ -110,6 +115,37 @@
         <activity
             android:name="com.ring0.ffmpegandroid.SimpleRgb24ColorbarActivity"
             android:label="@string/simple_rgb24_colorbar_name" >
+        </activity>
+        
+        <!-- SimplePcm16leSplitActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimplePcm16leSplitActivity"
+            android:label="@string/simple_pcm16le_split_name" >
+        </activity>
+        <!-- SimplePcm16leLefthalfActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimplePcm16leLefthalfActivity"
+            android:label="@string/simple_pcm16le_lefthalf_name" >
+        </activity>
+        <!-- SimplePcm16leDoublespeedActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimplePcm16leDoublespeedActivity"
+            android:label="@string/simple_pcm16le_doublespeed_name" >
+        </activity>
+        <!-- SimplePcm16lePcm8leActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimplePcm16lePcm8leActivity"
+            android:label="@string/simple_pcm16le_pcm8le_name" >
+        </activity>
+        <!-- SimplePcm16leCorpActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimplePcm16leCorpActivity"
+            android:label="@string/simple_pcm16le_corp_name" >
+        </activity>
+        <!-- SimplePcm16leWavActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimplePcm16leWavActivity"
+            android:label="@string/simple_pcm16le_wav_name" >
         </activity>
     </application>
 
