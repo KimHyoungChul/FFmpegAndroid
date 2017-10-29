@@ -1,5 +1,10 @@
 #include "com_ring0_ffmpeg_FFmpegHelper.h"
 #include "simple_yuv.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -628,4 +633,264 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm16le_1wave
 
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
+
+static jclass    FFmpegPlayerInterface;
+static jmethodID FFOnRenderer;
+
+const char *vertex_shader =
+     "attribute vec4 vertexIn;   \n"
+     "attribute vec2 textureIn;  \n"
+     "varying   vec2 textureOut; \n"
+     "void main(void)            \n"
+     "{                          \n"
+     "  gl_Position = vertexIn;  \n"
+     "  textureOut = textureIn;  \n"
+     "}                          \n";
+
+const char *frag_shader =
+     "precision mediump float;                                                \n"
+     "uniform   sampler2D tex_y;                                              \n"
+     "uniform   sampler2D tex_u;                                              \n"
+     "uniform   sampler2D tex_v;                                              \n"
+     "varying   vec2      textureOut;                                         \n"
+     "void main()                                                             \n"
+     "{                                                                       \n"
+     "   vec4 c = vec4((texture2D(tex_y, textureOut).r - 16./255.) * 1.164);  \n"
+     "   vec4 U = vec4( texture2D(tex_u, textureOut).r - 128./255.);          \n"
+     "   vec4 V = vec4( texture2D(tex_v, textureOut).r - 128./255.);          \n"
+     "   c += V * vec4(1.596, -0.813, 0, 0);                                  \n"
+     "   c += U * vec4(0, -0.392, 2.017, 0);                                  \n"
+     "   c.a = 1.0;                                                           \n"
+     "   gl_FragColor = c;                                                    \n"
+     "}                                                                       \n";
+
+static GLfloat vertexVertices[] = {
+    -1.0f, -1.0f,
+     1.0f, -1.0f,
+    -1.0f,  1.0f,
+     1.0f,  1.0f
+};
+
+static GLfloat textureVertices[] = {
+     0.0f,  1.0f,
+     1.0f,  1.0f,
+     0.0f,  0.0f,
+     1.0f,  0.0f
+};
+
+GLuint  texture_y, texture_u, texture_v;
+GLuint  textureUniformY, textureUniformU, textureUniformV;
+#define GL_ATTRIB_VERTEX  3
+#define GL_ATTRIB_TEXTURE 4
+
+void setupShader(int width, int height) {
+    GLint vertCompiled, fragCompiled, linked;
+    GLint v = glCreateShader(GL_VERTEX_SHADER);
+    GLint f = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(v, 1, &vertex_shader, 0);
+    glShaderSource(f, 1, &frag_shader, 0);
+
+    glCompileShader(v);
+    glGetShaderiv(v, GL_COMPILE_STATUS, &vertCompiled);
+
+    glCompileShader(f);
+    glGetShaderiv(f, GL_COMPILE_STATUS, &fragCompiled);
+
+    GLuint program = glCreateProgram();
+    glAttachShader(program, v);
+    glAttachShader(program, f);
+
+    glBindAttribLocation(program, GL_ATTRIB_VERTEX, "vertexIn");
+    glBindAttribLocation(program, GL_ATTRIB_TEXTURE, "textureIn");
+    glLinkProgram(program);
+
+    glGetProgramiv(program, GL_LINK_STATUS, &linked);
+    glUseProgram(program);
+
+    textureUniformY = glGetUniformLocation(program, "tex_y");
+    textureUniformU = glGetUniformLocation(program, "tex_u");
+    textureUniformV = glGetUniformLocation(program, "tex_v");
+    // 设置数据
+    glVertexAttribPointer(GL_ATTRIB_VERTEX, 2, GL_FLOAT, 0, 0, vertexVertices);
+    glVertexAttribPointer(GL_ATTRIB_TEXTURE, 2, GL_FLOAT, 0, 0, textureVertices);
+    glEnableVertexAttribArray(GL_ATTRIB_VERTEX);
+    glEnableVertexAttribArray(GL_ATTRIB_TEXTURE);
+
+    // 初始化贴图
+    glGenTextures(1, &texture_y);
+    glBindTexture(GL_TEXTURE_2D, texture_y);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0,
+            GL_LUMINANCE, GL_UNSIGNED_BYTE, 0);
+
+    glGenTextures(1, &texture_u);
+    glBindTexture(GL_TEXTURE_2D, texture_u);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width / 2, height / 2, 0,
+                GL_LUMINANCE, GL_UNSIGNED_BYTE, 0);
+
+    glGenTextures(1, &texture_v);
+    glBindTexture(GL_TEXTURE_2D, texture_v);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width / 2, height / 2, 0,
+                GL_LUMINANCE, GL_UNSIGNED_BYTE, 0);
+}
+
+void setupTexture(char *buffer, int width, int height) {
+    int uvwidth  = width  / 2;
+    int uvheight = height / 2;
+
+    char *y_pixel = buffer;
+    char *u_pixel = (char*)y_pixel + (width * height);
+    char *v_pixel = (char*)u_pixel + (uvwidth * uvheight);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    // y
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture_y);
+    for (int row = 0; row < height; ++row) {
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, row, width, 1, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                y_pixel + (row * width));
+    }
+    glUniform1i(textureUniformY, 0);
+    // u
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture_u);
+    for (int row = 0; row < uvheight; ++row) {
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, row, uvwidth, 1, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                u_pixel + (row * uvwidth));
+    }
+    glUniform1i(textureUniformU, 1);
+    // v
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, texture_v);
+    for (int row = 0; row < uvheight; ++row) {
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, row, uvwidth, 1, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                v_pixel + (row * uvwidth));
+    }
+    glUniform1i(textureUniformV, 2);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glFlush();
+}
+
+void FFmpeg_OnRenderer(JNIEnv *env, jobject jinterface) {
+    env->CallVoidMethod(jinterface, FFOnRenderer);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player_1init
+  (JNIEnv *env, jclass) {
+    jobject jlocal        = env->FindClass("com/ring0/ffmpeg/FFmpegHelper$FFmpegPlayerInterface");
+    FFmpegPlayerInterface = (jclass)env->NewGlobalRef(jlocal);
+    FFOnRenderer          = env->GetMethodID(FFmpegPlayerInterface, "OnRenderer", "()V");
+    env->DeleteLocalRef(jlocal);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
+  (JNIEnv *env, jclass, jstring jfilename, jobject jinterface) {
+    char *filename = (char*)env->GetStringUTFChars(jfilename, 0);
+
+    AVFormatContext *pFormatCtx  =  0;
+    AVCodecContext  *pCodecCtx   =  0;
+    AVCodec         *pCodec      =  0;
+    AVFrame         *pFrame      =  0;
+    AVFrame         *pFrameYuv   =  0;
+    AVPacket        *pPackage    =  0;
+    SwsContext      *pSwsCtx     =  0;
+    int              got_picture =  0;
+    int              video_index = -1;
+    uint8_t         *out = 0;
+    av_register_all();
+    avformat_network_init();
+    avcodec_register_all();
+    pFormatCtx = avformat_alloc_context();
+    if (avformat_open_input(&pFormatCtx, filename, 0, 0) != 0) {
+        // avformat_open_input error
+        return;
+    }
+    if (avformat_find_stream_info(pFormatCtx, 0) < 0) {
+        // avformat_find_stream_info error
+        return;
+    }
+    for (int i = 0; i < pFormatCtx->nb_streams; i++) {
+        if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_index = i;
+            break;
+        }
+    }
+    if (video_index == -1) {
+        // not found video stream
+        return;
+    }
+    pCodecCtx = pFormatCtx->streams[video_index]->codec;
+    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    if (pCodec == 0) {
+        // not found coded decoder
+        return;
+    }
+    if (avcodec_open2(pCodecCtx, pCodec, 0) != 0) {
+        // avcodec_open2 error
+        return;
+    }
+    pPackage = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_init_packet(pPackage);
+    pFrame = av_frame_alloc();
+    pFrameYuv = av_frame_alloc();
+    out = (uint8_t*)av_malloc(av_image_get_buffer_size(AV_PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height, 1));
+    av_image_fill_arrays(pFrameYuv->data, pFrameYuv->linesize,
+            (const uint8_t*)out,
+            AV_PIX_FMT_YUV420P,
+            pCodecCtx->width,
+            pCodecCtx->height, 1);
+    pSwsCtx = sws_getContext(
+            pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt,
+            pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P,
+            SWS_BICUBIC, 0, 0, 0);
+
+    // 回调到 java 层
+    while (av_read_frame(pFormatCtx, pPackage) >= 0) {
+        if (pPackage->stream_index == video_index) {
+            int ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, pPackage);
+            if (ret >= 0 && got_picture) {
+                sws_scale(
+                        pSwsCtx,
+                        (const uint8_t* const*)pFrame->data, pFrame->linesize,
+                        0, pCodecCtx->height,
+                        pFrameYuv->data, pFrameYuv->linesize);
+                FFmpeg_OnRenderer(env, jinterface);
+            }
+        }
+        av_free_packet(pPackage);
+    }
+    while (1) {
+        int ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, pPackage);
+        if (ret < 0) {
+            break;
+        }
+        if (!got_picture) {
+            break;
+        }
+        sws_scale(pSwsCtx, (const uint8_t* const *) pFrame->data,
+                pFrame->linesize, 0, pCodecCtx->height, pFrameYuv->data,
+                pFrameYuv->linesize);
+        FFmpeg_OnRenderer(env, jinterface);
+        av_free_packet(pPackage);
+    }
+    av_frame_free(&pFrame);
+    av_frame_free(&pFrameYuv);
+    sws_freeContext(pSwsCtx);
+    avcodec_close(pCodecCtx);
+    avformat_close_input(&pFormatCtx);
+
+    env->ReleaseStringUTFChars(jfilename, filename);
 }

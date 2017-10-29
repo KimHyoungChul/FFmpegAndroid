@@ -1,0 +1,35 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llMain"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+    <!-- 播放窗口 -->
+    <android.opengl.GLSurfaceView
+        android:id="@+id/glSurface"
+        android:layout_width="fill_parent"
+        android:layout_height="200dp" />
+    
+    <!-- 源文件 -->
+    <LinearLayout
+        android:id="@+id/llDstfile"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/tvDstfile"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etDstfile"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+    
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp" />
+</LinearLayout>

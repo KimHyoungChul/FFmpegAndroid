@@ -78,4 +78,12 @@ public class FFmpegHelper {
     public static native void simple_pcm16le_corp(String srcfile, String dstfile, int startpoint, int count);
     // 将 pcm16le 保存为 wav
     public static native void simple_pcm16le_wave(String srcfile, String dstfile);
+
+    // 视频播放回调
+    public interface FFmpegPlayerInterface {
+        public void OnRenderer();
+    }
+    // 简单的视频播放器
+    public static native void simple_ffmpeg_player(String filename, FFmpegPlayerInterface interf);
+    public static native void simple_ffmpeg_player_init();
 }

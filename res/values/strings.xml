@@ -26,6 +26,7 @@
     <string name="simple_pcm16le_pcm8le_name">pcm16le 转换为 pcm8le</string>
     <string name="simple_pcm16le_corp_name">pcm16le 截取部分采样</string>
     <string name="simple_pcm16le_wav_name">pcm16le 保存为 wav</string>
+    <string name="simple_ffmpeg_player_name">simple ffmpeg player</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -263,6 +264,11 @@
     <string name="simple_pcm16le_wav_start">开始</string>
     <string name="simple_pcm16le_wav_toast_srcfile">请输入 pcm 的源文件</string>
     <string name="simple_pcm16le_wav_toast_dstfile">请输入 wav 的目标文件</string>
+    <!-- SimpleFFmpegPlayerActivity -->
+    <string name="simple_ffmpeg_player_filename">文件名</string>
+    <string name="simple_ffmpeg_player_filename_hint">请输入视频文件</string>
+    <string name="simple_ffmpeg_player_start">播放</string>
+    <string name="simple_ffmpeg_player_toast_filename">请输入视频文件</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -271,6 +277,7 @@
         <item>pcm 浏览器</item>
         <item>simple yuv demo</item>
         <item>simple pcm demo</item>
+        <item>simple ffmpeg player</item>
     </string-array>
     
     <string-array name="yuv_list">
