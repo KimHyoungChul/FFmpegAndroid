@@ -27,6 +27,7 @@
     <string name="simple_pcm16le_corp_name">pcm16le 截取部分采样</string>
     <string name="simple_pcm16le_wav_name">pcm16le 保存为 wav</string>
     <string name="simple_ffmpeg_player_name">simple ffmpeg player</string>
+    <string name="simple_ffmpeg_decoder_name">simple ffmpeg decoder</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -270,6 +271,14 @@
     <string name="simple_ffmpeg_player_hard">硬件解码</string>
     <string name="simple_ffmpeg_player_start">播放</string>
     <string name="simple_ffmpeg_player_toast_filename">请输入视频文件</string>
+    <!-- SimpleFFmpegDecoderActivity -->
+    <string name="simple_ffmpeg_decoder_filename">文件名</string>
+    <string name="simple_ffmpeg_decoder_filepath">保存路径</string>
+    <string name="simple_ffmpeg_decoder_filename_hint">这里填入要解码的视频文件</string>
+    <string name="simple_ffmpeg_decoder_filepath_hint">这里填入解码后保存的路径</string>
+    <string name="simple_ffmpeg_decoder_decode">解码</string>
+    <string name="simple_ffmpeg_decoder_toast_filename">请输入要解码的视频文件</string>
+    <string name="simple_ffmpeg_decoder_toast_filepath">请输入解码的保存路径</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -279,6 +288,7 @@
         <item>simple yuv demo</item>
         <item>simple pcm demo</item>
         <item>simple ffmpeg player</item>
+        <item>simple ffmpeg decoder</item>
     </string-array>
     
     <string-array name="yuv_list">
@@ -330,5 +340,13 @@
         <item>pcm16le 转换为 pcm8le</item>
         <item>pcm16le 截取部分采样</item>
         <item>pcm16le 保存为 wav</item>
+    </string-array>
+    
+    <string-array name="simple_decoder_list">
+        <item>mpeg4</item>
+        <item>h264</item>
+        <item>h265</item>
+        <item>vp8</item>
+        <item>vp9</item>
     </string-array>
 </resources>
