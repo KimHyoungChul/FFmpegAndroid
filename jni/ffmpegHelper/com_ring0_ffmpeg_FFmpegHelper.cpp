@@ -1,8 +1,10 @@
 #include "com_ring0_ffmpeg_FFmpegHelper.h"
 #include "simple_yuv.h"
+#include <list>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
@@ -635,8 +637,18 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm16le_1wave
     env->ReleaseStringUTFChars(jdstfile, dstfile);
 }
 
-static jclass    FFmpegPlayerInterface;
-static jmethodID FFOnRenderer;
+struct Frame {
+    int   width;
+    int   height;
+    char *frame;
+};
+
+static jclass           FFmpegPlayerInterface;
+static jmethodID        FFOnRenderer;
+static pthread_mutex_t  mutex;
+static std::list<Frame*> frames;
+static int frame_width;
+static int frame_height;
 
 const char *vertex_shader =
      "attribute vec4 vertexIn;   \n"
@@ -784,7 +796,24 @@ void setupTexture(char *buffer, int width, int height) {
     glFlush();
 }
 
-void FFmpeg_OnRenderer(JNIEnv *env, jobject jinterface) {
+void FFmpeg_OnRenderer(JNIEnv *env, jobject jinterface, int width, int height, AVFrame *frame) {
+    char *buffer = (char*) malloc(width * height * 3 / 2);
+    char *frame_y = buffer;
+    char *frame_u = buffer + (width * height);
+    char *frame_v = frame_u + ((width * height) / 4);
+    memcpy(frame_y, frame->data[0], width * height);
+    memcpy(frame_u, frame->data[1], (width * height) / 4);
+    memcpy(frame_v, frame->data[2], (width * height) / 4);
+
+    Frame *f = (Frame*)malloc(sizeof(Frame));
+    f->width  = width;
+    f->height = height;
+    f->frame  = buffer;
+
+    pthread_mutex_lock(&mutex);
+    frames.push_back(f);
+    pthread_mutex_unlock(&mutex);
+
     env->CallVoidMethod(jinterface, FFOnRenderer);
 }
 
@@ -794,6 +823,36 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
     FFmpegPlayerInterface = (jclass)env->NewGlobalRef(jlocal);
     FFOnRenderer          = env->GetMethodID(FFmpegPlayerInterface, "OnRenderer", "()V");
     env->DeleteLocalRef(jlocal);
+
+    frame_width  = 0;
+    frame_height = 0;
+    pthread_mutex_init(&mutex, 0);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player_1renderer
+  (JNIEnv *, jclass) {
+    // get Frame
+    Frame *frame = 0;
+    pthread_mutex_lock(&mutex);
+    if (!frames.empty()) {
+        frame = frames.front();
+        frames.pop_front();
+    }
+    pthread_mutex_unlock(&mutex);
+    // renderer
+    if (frame) {
+        if (frame->width != frame_width || frame->height != frame_height) {
+            frame_width  = frame->width;
+            frame_height = frame->height;
+            setupShader(frame_width, frame_height);
+        }
+        if (frame->frame) {
+            setupTexture(frame->frame, frame_width, frame_height);
+        }
+        free(frame->frame);
+        free(frame);
+        frame = 0;
+    }
 }
 
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
@@ -867,7 +926,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
                         (const uint8_t* const*)pFrame->data, pFrame->linesize,
                         0, pCodecCtx->height,
                         pFrameYuv->data, pFrameYuv->linesize);
-                FFmpeg_OnRenderer(env, jinterface);
+                FFmpeg_OnRenderer(
+                        env, jinterface,
+                        pCodecCtx->width, pCodecCtx->height, pFrameYuv);
             }
         }
         av_free_packet(pPackage);
@@ -883,7 +944,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
         sws_scale(pSwsCtx, (const uint8_t* const *) pFrame->data,
                 pFrame->linesize, 0, pCodecCtx->height, pFrameYuv->data,
                 pFrameYuv->linesize);
-        FFmpeg_OnRenderer(env, jinterface);
+        FFmpeg_OnRenderer(
+                env, jinterface,
+                pCodecCtx->width, pCodecCtx->height, pFrameYuv);
         av_free_packet(pPackage);
     }
     av_frame_free(&pFrame);

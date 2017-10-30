@@ -91,7 +91,6 @@ public class SimpleFFmpegPlayerActivity extends Activity implements OnClickListe
                 @Override
                 public void OnRenderer() {
                     glSurface.requestRender();
-                    Log.d("zd-frame", "frame");
                 }
             });
         }
@@ -108,6 +107,7 @@ public class SimpleFFmpegPlayerActivity extends Activity implements OnClickListe
 
         @Override
         public void onDrawFrame(GL10 gl) {
+            FFmpegHelper.simple_ffmpeg_player_renderer();
         }
     }
 

@@ -86,4 +86,5 @@ public class FFmpegHelper {
     // 简单的视频播放器
     public static native void simple_ffmpeg_player(String filename, FFmpegPlayerInterface interf);
     public static native void simple_ffmpeg_player_init();
+    public static native void simple_ffmpeg_player_renderer();
 }
