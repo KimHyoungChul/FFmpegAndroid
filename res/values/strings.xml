@@ -267,6 +267,7 @@
     <!-- SimpleFFmpegPlayerActivity -->
     <string name="simple_ffmpeg_player_filename">文件名</string>
     <string name="simple_ffmpeg_player_filename_hint">请输入视频文件</string>
+    <string name="simple_ffmpeg_player_hard">硬件解码</string>
     <string name="simple_ffmpeg_player_start">播放</string>
     <string name="simple_ffmpeg_player_toast_filename">请输入视频文件</string>
     

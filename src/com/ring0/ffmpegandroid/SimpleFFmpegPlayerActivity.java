@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -28,6 +29,7 @@ public class SimpleFFmpegPlayerActivity extends Activity implements OnClickListe
     private LinearLayout llDstFile;
     private TextView tvDstfile;
     private EditText etDstfile;
+    private CheckBox cbHard;
     private Button btnStart;
     private GLSurfaceView glSurface;
     
@@ -47,6 +49,9 @@ public class SimpleFFmpegPlayerActivity extends Activity implements OnClickListe
         
         etDstfile = (EditText)llDstFile.findViewById(R.id.etDstfile);
         etDstfile.setHint(getResources().getString(R.string.simple_ffmpeg_player_filename_hint));
+        
+        cbHard = (CheckBox)findViewById(R.id.cbHard);
+        cbHard.setText(getResources().getString(R.string.simple_ffmpeg_player_hard));
         
         btnStart = (Button)findViewById(R.id.btnStart);
         btnStart.setText(getResources().getString(R.string.simple_ffmpeg_player_start));
@@ -72,22 +77,24 @@ public class SimpleFFmpegPlayerActivity extends Activity implements OnClickListe
             Toast.makeText(this, getResources().getString(R.string.simple_ffmpeg_player_toast_filename), Toast.LENGTH_SHORT).show();
             return;
         }
-        
-        FFmpegHelper.simple_ffmpeg_player_init();
-        new MyThread(filename).start();
+        new MyThread(filename, cbHard.isChecked()).start();
     }
     
     private class MyThread extends Thread {
         String filename = null;
+        boolean hard = false;
         
-        public MyThread(String filename) {
+        public MyThread(String filename, boolean hard) {
             this.filename = filename;
+            this.hard = hard;
+            
+            FFmpegHelper.simple_ffmpeg_player_init();
         }
         
         @Override
         public void run() {
             super.run();
-            FFmpegHelper.simple_ffmpeg_player(this.filename, new FFmpegPlayerInterface() {
+            FFmpegHelper.simple_ffmpeg_player(this.filename, hard, new FFmpegPlayerInterface() {
                 @Override
                 public void OnRenderer() {
                     glSurface.requestRender();

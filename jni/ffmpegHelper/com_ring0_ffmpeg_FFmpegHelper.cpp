@@ -11,6 +11,7 @@
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
+#include <libavcodec/jni.h>
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>
 #include <libavutil/imgutils.h>
@@ -816,6 +817,10 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
     FFOnRenderer          = env->GetMethodID(FFmpegPlayerInterface, "OnRenderer", "()V");
     env->DeleteLocalRef(jlocal);
 
+    JavaVM *vm = 0;
+    env->GetJavaVM((JavaVM**)&vm);
+    av_jni_set_java_vm(vm, 0);
+
     frame_width  = 0;
     frame_height = 0;
     pthread_mutex_init(&mutex, 0);
@@ -848,7 +853,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
 }
 
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
-  (JNIEnv *env, jclass, jstring jfilename, jobject jinterface) {
+  (JNIEnv *env, jclass, jstring jfilename, jboolean hard, jobject jinterface) {
     char *filename = (char*)env->GetStringUTFChars(jfilename, 0);
 
     AVFormatContext *pFormatCtx  =  0;
@@ -884,7 +889,34 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
         return;
     }
     pCodecCtx = pFormatCtx->streams[video_index]->codec;
-    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    if (hard) {
+        // 查询可用的硬件解码器
+        switch (pCodecCtx->codec_id) {
+        case AV_CODEC_ID_MPEG4:
+            pCodec = avcodec_find_decoder_by_name("mpeg4_mediacodec");
+            break;
+        case AV_CODEC_ID_H264:
+            pCodec = avcodec_find_decoder_by_name("h264_mediacodec");
+            break;
+        case AV_CODEC_ID_H265: // AV_CODEC_ID_HEVC
+            pCodec = avcodec_find_decoder_by_name("hevc_mediacodec");
+            break;
+        case AV_CODEC_ID_VP8:
+            pCodec = avcodec_find_decoder_by_name("vp8_mediacodec");
+            break;
+        case AV_CODEC_ID_VP9:
+            pCodec = avcodec_find_decoder_by_name("vp9_mediacodec");
+            break;
+        default:
+            pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+            break;
+        }
+    }
+    else {
+        // 软件解码
+        pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    }
+
     if (pCodec == 0) {
         // not found coded decoder
         return;
