@@ -766,32 +766,24 @@ void setupTexture(char *buffer, int width, int height) {
     char *u_pixel = (char*)y_pixel + (width * height);
     char *v_pixel = (char*)u_pixel + (uvwidth * uvheight);
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
     // y
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture_y);
-    for (int row = 0; row < height; ++row) {
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, row, width, 1, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                y_pixel + (row * width));
-    }
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, y_pixel);
     glUniform1i(textureUniformY, 0);
     // u
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture_u);
-    for (int row = 0; row < uvheight; ++row) {
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, row, uvwidth, 1, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                u_pixel + (row * uvwidth));
-    }
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, uvwidth, uvheight, GL_LUMINANCE, GL_UNSIGNED_BYTE, u_pixel);
     glUniform1i(textureUniformU, 1);
     // v
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, texture_v);
-    for (int row = 0; row < uvheight; ++row) {
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, row, uvwidth, 1, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                v_pixel + (row * uvwidth));
-    }
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, uvwidth, uvheight, GL_LUMINANCE, GL_UNSIGNED_BYTE, v_pixel);
     glUniform1i(textureUniformV, 2);
+
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glFlush();
 }
@@ -799,7 +791,7 @@ void setupTexture(char *buffer, int width, int height) {
 void FFmpeg_OnRenderer(JNIEnv *env, jobject jinterface, int width, int height, AVFrame *frame) {
     char *buffer = (char*) malloc(width * height * 3 / 2);
     char *frame_y = buffer;
-    char *frame_u = buffer + (width * height);
+    char *frame_u = frame_y + (width * height);
     char *frame_v = frame_u + ((width * height) / 4);
     memcpy(frame_y, frame->data[0], width * height);
     memcpy(frame_u, frame->data[1], (width * height) / 4);
