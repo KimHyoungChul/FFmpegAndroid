@@ -45,7 +45,12 @@ extern "C" {
 #define FFMPEG_SAMPLE_FMT_FLTP 9
 #define FFMPEG_SAMPLE_FMT_DBLP 10
 #define FFMPEG_SAMPLE_FMT_S64P 11
-
+// decoder_type
+#define FFMPEG_DECODER_MPEG4   0
+#define FFMPEG_DECODER_H264    1
+#define FFMPEG_DECODER_H265    2
+#define FFMPEG_DECODER_VP8     3
+#define FFMPEG_DECODER_VP9     4
 /**
  *  返回 ffmpeg 中的像素格式
  */
@@ -130,6 +135,28 @@ AVSampleFormat get_pcm_type(int pcm_type) {
     }
     return format;
 }
+
+AVCodecID get_decoder_type(int decoder_type) {
+    AVCodecID result = AV_CODEC_ID_NONE;
+    switch (decoder_type) {
+    case FFMPEG_DECODER_MPEG4:
+        result = AV_CODEC_ID_MPEG4;
+        break;
+    case FFMPEG_DECODER_H264:
+        result = AV_CODEC_ID_H264;
+        break;
+    case FFMPEG_DECODER_H265:
+        result = AV_CODEC_ID_H265;
+        break;
+    case FFMPEG_DECODER_VP8:
+        result = AV_CODEC_ID_VP8;
+        break;
+    case FFMPEG_DECODER_VP9:
+        result = AV_CODEC_ID_VP9;
+        break;
+    }
+    return result;
+}
 /**
  *  返回 ffmpeg 的像素描述字符串
  */
@@ -210,6 +237,27 @@ char* get_pcm_char(int pcm_type) {
         break;
     case FFMPEG_SAMPLE_FMT_S64P:
         result = "s64p";
+        break;
+    }
+    return result;
+}
+char* get_decoder_char(int decoder_type) {
+    char *result = "";
+    switch (decoder_type) {
+    case FFMPEG_DECODER_MPEG4:
+        result = "mpeg4";
+        break;
+    case FFMPEG_DECODER_H264:
+        result = "h264";
+        break;
+    case FFMPEG_DECODER_H265:
+        result = "h265";
+        break;
+    case FFMPEG_DECODER_VP8:
+        result = "vp8";
+        break;
+    case FFMPEG_DECODER_VP9:
+        result = "vp9";
         break;
     }
     return result;
@@ -980,4 +1028,113 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
     avformat_close_input(&pFormatCtx);
 
     env->ReleaseStringUTFChars(jfilename, filename);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1decoder
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath, jint decoder_type) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *path    = (char*)env->GetStringUTFChars(jpath, 0);
+
+    char *dstfile = (char*)malloc(sizeof(char) * 1024);
+    sprintf(dstfile, "%s/%s.yuv", path, get_decoder_char(decoder_type));
+
+    FILE *file_src = fopen(srcfile, "rb+");
+    FILE *file_dst = fopen(dstfile, "wb+");
+    int   in_size = 4096;
+    char *in_buf = (char*)malloc(in_size + FF_INPUT_BUFFER_PADDING_SIZE);
+    int   cur_size = 0;
+    char *cur_buf = 0;
+
+    AVCodecParserContext *pParserCtx = 0;
+    AVCodecContext       *pCodecCtx  = 0;
+    AVCodec              *pCodec     = 0;
+    AVFrame              *pFrame     = 0;
+    AVPacket             *pPacket    = 0;
+    AVCodecID             codec_id   = get_decoder_type(decoder_type);
+
+    avcodec_register_all();
+    pCodec = avcodec_find_decoder(codec_id);
+    pCodecCtx = avcodec_alloc_context3(pCodec);
+    pParserCtx = av_parser_init(codec_id);
+    if (avcodec_open2(pCodecCtx, pCodec, 0) != 0) {
+        // avcodec_open2 error
+        return;
+    }
+    pFrame = av_frame_alloc();
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_init_packet(pPacket);
+
+    while (1) {
+        cur_size = fread(in_buf, 1, in_size, file_src);
+        cur_buf  = in_buf;
+        if (cur_size == 0) {
+            break;
+        }
+        while (cur_size > 0) {
+            int len = av_parser_parse2(
+                    pParserCtx, pCodecCtx,
+                    &pPacket->data, &pPacket->size,
+                    (const unsigned char*)cur_buf, cur_size,
+                    AV_NOPTS_VALUE, AV_NOPTS_VALUE, AV_NOPTS_VALUE);
+            cur_buf  += len;
+            cur_size -= len;
+            if (pPacket->size == 0) {
+                continue;
+            }
+            int got_picture = 0;
+            int ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, pPacket);
+            if (ret < 0) {
+                break;
+            }
+            if (!got_picture) {
+                break;
+            }
+            // save y
+            for (int i = 0; i < pFrame->height; i++) {
+                fwrite(pFrame->data[0] + (pFrame->linesize[0] * i), 1, pFrame->linesize[0], file_dst);
+            }
+            // save u
+            for (int i = 0; i < pFrame->height / 2; i++) {
+                fwrite(pFrame->data[1] + (pFrame->linesize[1] * i), 1, pFrame->linesize[1], file_dst);
+            }
+            // save v
+            for (int i = 0; i < pFrame->height / 2; i++) {
+                fwrite(pFrame->data[2] + (pFrame->linesize[2] * i), 1, pFrame->linesize[2], file_dst);
+            }
+        }
+    }
+    pPacket->data = 0;
+    pPacket->size = 0;
+    while (1) {
+        int got_picture = 0;
+        int ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, pPacket);
+        if (ret < 0) {
+            break;
+        }
+        if (!got_picture) {
+            break;
+        }
+        // save y
+        for (int i = 0; i < pFrame->height; i++) {
+            fread(pFrame->data[0] + (pFrame->linesize[0] * i), 1, pFrame->linesize[0], file_dst);
+        }
+        // save u
+        for (int i = 0; i < pFrame->height / 2; i++) {
+            fread(pFrame->data[1] + (pFrame->linesize[1] * i), 1, pFrame->linesize[1], file_dst);
+        }
+        // save u
+        for (int i = 0; i < pFrame->height / 2; i++) {
+            fread(pFrame->data[2] + (pFrame->linesize[2] * i), 1, pFrame->linesize[2], file_dst);
+        }
+    }
+    free(dstfile);
+    free(in_buf);
+    fclose(file_src);
+    fclose(file_dst);
+    av_free_packet(pPacket);
+    av_frame_free(&pFrame);
+    avcodec_close(pCodecCtx);
+    av_parser_close(pParserCtx);
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jpath, path);
 }

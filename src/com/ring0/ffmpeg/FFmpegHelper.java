@@ -30,6 +30,13 @@ public class FFmpegHelper {
     public static final int FFMPEG_SAMPLE_FMT_FLTP = 9;
     public static final int FFMPEG_SAMPLE_FMT_DBLP = 10;
     public static final int FFMPEG_SAMPLE_FMT_S64P = 11;
+    // decoder_type
+    public static final int FFMPEG_DECODER_MPEG4   = 0;
+    public static final int FFMPEG_DECODER_H264    = 1;
+    public static final int FFMPEG_DECODER_H265    = 2;
+    public static final int FFMPEG_DECODER_VP8     = 3;
+    public static final int FFMPEG_DECODER_VP9     = 4;
+    
     // 解码视频到 YUV
     // path:     yuv 保存路径
     // frame:    解码帧数
@@ -87,4 +94,6 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg_player(String filename, boolean hard, FFmpegPlayerInterface interf);
     public static native void simple_ffmpeg_player_init();
     public static native void simple_ffmpeg_player_renderer();
+    // 精简的解码器
+    public static native void simple_ffmpeg_decoder(String srcfile, String path, int decoder_type);
 }
