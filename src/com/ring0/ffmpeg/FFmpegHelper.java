@@ -36,7 +36,12 @@ public class FFmpegHelper {
     public static final int FFMPEG_DECODER_H265    = 2;
     public static final int FFMPEG_DECODER_VP8     = 3;
     public static final int FFMPEG_DECODER_VP9     = 4;
-    
+    // encoder_type
+    public static final int FFMPEG_ENCODER_MPEG4   = 0;
+    public static final int FFMPEG_ENCODER_H264    = 1;
+    public static final int FFMPEG_ENCODER_H265    = 2;
+    public static final int FFMPEG_ENCODER_VP8     = 3;
+    public static final int FFMPEG_ENCODER_VP9     = 4;
     // 解码视频到 YUV
     // path:     yuv 保存路径
     // frame:    解码帧数
@@ -96,4 +101,6 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg_player_renderer();
     // 精简的解码器
     public static native void simple_ffmpeg_decoder(String srcfile, String path, int decoder_type);
+    // 精简的编码器
+    public static native void simple_ffmpeg_encoder(String srcfile, String path, int width, int hegiht, int encoder_type);
 }

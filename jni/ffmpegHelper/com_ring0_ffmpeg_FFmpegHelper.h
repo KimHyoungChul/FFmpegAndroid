@@ -77,6 +77,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1decoder
   (JNIEnv *, jclass, jstring, jstring, jint);
 
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1encoder
+  (JNIEnv *, jclass, jstring, jstring, jint, jint, jint);
+
 #ifdef __cplusplus
 }
 #endif
