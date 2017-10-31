@@ -28,6 +28,7 @@
     <string name="simple_pcm16le_wav_name">pcm16le 保存为 wav</string>
     <string name="simple_ffmpeg_player_name">simple ffmpeg player</string>
     <string name="simple_ffmpeg_decoder_name">simple ffmpeg decoder</string>
+    <string name="simple_ffmpeg_encoder_name">simple ffmpeg encoder</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -279,6 +280,19 @@
     <string name="simple_ffmpeg_decoder_decode">解码</string>
     <string name="simple_ffmpeg_decoder_toast_filename">请输入要解码的视频文件</string>
     <string name="simple_ffmpeg_decoder_toast_filepath">请输入解码的保存路径</string>
+    <!-- SimpleFFmpegEncoderActivity -->
+    <string name="simple_ffmpeg_encoder_srcfile">源文件</string>
+    <string name="simple_ffmpeg_encoder_path">路径</string>
+    <string name="simple_ffmpeg_encoder_srcfile_hint">这里填入源文件</string>
+    <string name="simple_ffmpeg_encoder_path_hint">这里目标路径</string>
+    <string name="simple_ffmpeg_encoder_width">宽</string>
+    <string name="simple_ffmpeg_encoder_height">高</string>
+    <string name="simple_ffmpeg_encoder_yuv">类型</string>
+    <string name="simple_ffmpeg_encoder_start">开始</string>
+    <string name="simple_ffmpeg_encoder_toast_srcfile">请输入待编码的文件</string>
+    <string name="simple_ffmpeg_encoder_toast_path">请输入目标路径</string>
+    <string name="simple_ffmpeg_encoder_toast_width">请输入宽</string>
+    <string name="simple_ffmpeg_encoder_toast_height">请输入高</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -289,6 +303,7 @@
         <item>simple pcm demo</item>
         <item>simple ffmpeg player</item>
         <item>simple ffmpeg decoder</item>
+        <item>simple ffmpeg encoder</item>
     </string-array>
     
     <string-array name="yuv_list">
@@ -343,6 +358,14 @@
     </string-array>
     
     <string-array name="simple_decoder_list">
+        <item>mpeg4</item>
+        <item>h264</item>
+        <item>h265</item>
+        <item>vp8</item>
+        <item>vp9</item>
+    </string-array>
+    
+    <string-array name="simple_encoder_list">
         <item>mpeg4</item>
         <item>h264</item>
         <item>h265</item>

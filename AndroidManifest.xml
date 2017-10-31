@@ -157,6 +157,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleFFmpegDecoderActivity"
             android:label="@string/simple_ffmpeg_decoder_name" >
         </activity>
+        <!-- SimpleFFmpegEncoderActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleFFmpegEncoderActivity"
+            android:label="@string/simple_ffmpeg_encoder_name" >
+        </activity>
     </application>
 
 </manifest>
