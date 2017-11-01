@@ -1,7 +1,7 @@
 checking for -Werror=unknown-warning-option... no
 Failed commandline was:
 --------------------------------------------------
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64   -Werror=unknown-warning-option   --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64 -nostdlib -o conftest
+/home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r10d/platforms/android-21/arch-mips64   -Werror=unknown-warning-option   --sysroot=/home/ring0/develop/android-ndk-r10d/platforms/android-21/arch-mips64 -o conftest
 cc1: error: -Werror=unknown-warning-option: no option -Wunknown-warning-option
 --------------------------------------------------
 Failed program was:
@@ -9,20 +9,20 @@ Failed program was:
 int main (void) {  return 0; }
 --------------------------------------------------
 x264 configure script
-Command line options: "--prefix=android/mips64" "--host=mips64el-linux-android" "--sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64" "--cross-prefix=/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-" "--extra-cflags=" "--extra-ldflags=-nostdlib" "--enable-static" "--enable-shared" "--enable-strip" "--disable-asm" "--disable-cli" "--disable-win32thread" "--disable-avs" "--disable-swscale" "--disable-lavf" "--disable-ffms" "--disable-gpac" "--disable-lsmash"
+Command line options: "--prefix=android/mips64" "--host=mips64el-linux-android" "--sysroot=/home/ring0/develop/android-ndk-r10d/platforms/android-21/arch-mips64" "--cross-prefix=/home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-" "--extra-cflags=" "--disable-asm" "--enable-static" "--enable-strip" "--enable-pic" "--disable-cli" "--disable-win32thread" "--disable-avs" "--disable-swscale" "--disable-lavf" "--disable-ffms" "--disable-gpac" "--disable-lsmash"
 
-checking whether /home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc works... yes
-checking whether /home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc supports for( int i = 0; i < 9; i++ ); with -std=gnu99... yes
+checking whether /home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc works... yes
+checking whether /home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc supports for( int i = 0; i < 9; i++ ); with -std=gnu99... yes
 checking for pthread_create(0,0,0,0); in pthread.h... no
 Failed commandline was:
 --------------------------------------------------
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64  -std=gnu99 -D_GNU_SOURCE  -lpthread   --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64 -nostdlib -lm -o conftest
+/home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r10d/platforms/android-21/arch-mips64  -std=gnu99 -D_GNU_SOURCE  -lpthread   --sysroot=/home/ring0/develop/android-ndk-r10d/platforms/android-21/arch-mips64 -lm -o conftest
 conftest.c: In function 'main':
 conftest.c:2:1: warning: null argument where non-null required (argument 1) [-Wnonnull]
  int main (void) { pthread_create(0,0,0,0); return 0; }
  ^
 conftest.c:2:1: warning: null argument where non-null required (argument 3) [-Wnonnull]
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/../lib/gcc/mips64el-linux-android/4.9.x/../../../../mips64el-linux-android/bin/ld: cannot find -lpthread
+/home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/../lib/gcc/mips64el-linux-android/4.9/../../../../mips64el-linux-android/bin/ld: cannot find -lpthread
 collect2: error: ld returned 1 exit status
 --------------------------------------------------
 Failed program was:
@@ -30,83 +30,14 @@ Failed program was:
 #include <pthread.h>
 int main (void) { pthread_create(0,0,0,0); return 0; }
 --------------------------------------------------
-checking for pthread_create(0,0,0,0); in pthread.h... no
-Failed commandline was:
---------------------------------------------------
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64  -std=gnu99 -D_GNU_SOURCE     --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64 -nostdlib -lm -o conftest
-conftest.c: In function 'main':
-conftest.c:2:1: warning: null argument where non-null required (argument 1) [-Wnonnull]
- int main (void) { pthread_create(0,0,0,0); return 0; }
- ^
-conftest.c:2:1: warning: null argument where non-null required (argument 3) [-Wnonnull]
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/../lib/gcc/mips64el-linux-android/4.9.x/../../../../mips64el-linux-android/bin/ld: warning: cannot find entry symbol __start; defaulting to 00000001200004e0
-/tmp/ccdiWPX1.o: In function `main':
-conftest.c:(.text+0x30): undefined reference to `pthread_create'
-collect2: error: ld returned 1 exit status
---------------------------------------------------
-Failed program was:
---------------------------------------------------
-#include <pthread.h>
-int main (void) { pthread_create(0,0,0,0); return 0; }
---------------------------------------------------
+checking for pthread_create(0,0,0,0); in pthread.h... yes
+checking for cpu_set_t p_aff; return CPU_COUNT(&p_aff); in sched.h... yes
 checking for return log2f(2); in math.h... yes
 checking whether defined(MAP_PRIVATE) is true... yes
 checking for uint32_t test_vec __attribute__ ((vector_size (16))) = {0,1,2,3}; in stdint.h... yes
 checking for stdio.h... yes
 checking for -fno-tree-vectorize... yes
-checking for fseeko(stdin,0,0); in stdio.h... no
-Failed commandline was:
---------------------------------------------------
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c -O3 -ffast-math  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64  -std=gnu99 -D_GNU_SOURCE -fPIC -fomit-frame-pointer -fno-tree-vectorize     --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64 -nostdlib -lm -s -o conftest
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/../lib/gcc/mips64el-linux-android/4.9.x/../../../../mips64el-linux-android/bin/ld: warning: cannot find entry symbol __start; defaulting to 00000001200004f0
-/tmp/ccRZXyKb.o: In function `main':
-conftest.c:(.text.startup+0x20): undefined reference to `fseeko'
-conftest.c:(.text.startup+0x28): undefined reference to `__sF'
-collect2: error: ld returned 1 exit status
---------------------------------------------------
-Failed program was:
---------------------------------------------------
-#include <stdio.h>
-int main (void) { fseeko(stdin,0,0); return 0; }
---------------------------------------------------
-checking for fseeko64(stdin,0,0); in stdio.h... no
-Failed commandline was:
---------------------------------------------------
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c -O3 -ffast-math  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64  -std=gnu99 -D_GNU_SOURCE -fPIC -fomit-frame-pointer -fno-tree-vectorize     --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64 -nostdlib -lm -s -o conftest
-conftest.c: In function 'main':
-conftest.c:2:1: warning: implicit declaration of function 'fseeko64' [-Wimplicit-function-declaration]
- int main (void) { fseeko64(stdin,0,0); return 0; }
- ^
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/../lib/gcc/mips64el-linux-android/4.9.x/../../../../mips64el-linux-android/bin/ld: warning: cannot find entry symbol __start; defaulting to 00000001200004f0
-/tmp/cchOfaob.o: In function `main':
-conftest.c:(.text.startup+0x20): undefined reference to `fseeko64'
-conftest.c:(.text.startup+0x28): undefined reference to `__sF'
-collect2: error: ld returned 1 exit status
---------------------------------------------------
-Failed program was:
---------------------------------------------------
-#include <stdio.h>
-int main (void) { fseeko64(stdin,0,0); return 0; }
---------------------------------------------------
-checking for _fseeki64(stdin,0,0); in stdio.h... no
-Failed commandline was:
---------------------------------------------------
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c -O3 -ffast-math  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64  -std=gnu99 -D_GNU_SOURCE -fPIC -fomit-frame-pointer -fno-tree-vectorize     --sysroot=/home/ring0/develop/android-ndk-r14b/platforms/android-21/arch-mips64 -nostdlib -lm -s -o conftest
-conftest.c: In function 'main':
-conftest.c:2:1: warning: implicit declaration of function '_fseeki64' [-Wimplicit-function-declaration]
- int main (void) { _fseeki64(stdin,0,0); return 0; }
- ^
-/home/ring0/develop/android-ndk-r14b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/../lib/gcc/mips64el-linux-android/4.9.x/../../../../mips64el-linux-android/bin/ld: warning: cannot find entry symbol __start; defaulting to 00000001200004f0
-/tmp/ccvOTwid.o: In function `main':
-conftest.c:(.text.startup+0x20): undefined reference to `_fseeki64'
-conftest.c:(.text.startup+0x28): undefined reference to `__sF'
-collect2: error: ld returned 1 exit status
---------------------------------------------------
-Failed program was:
---------------------------------------------------
-#include <stdio.h>
-int main (void) { _fseeki64(stdin,0,0); return 0; }
---------------------------------------------------
+checking for fseeko(stdin,0,0); in stdio.h... yes
 checking for -Wshadow... yes
 checking for -Wmaybe-uninitialized... yes
 
@@ -115,7 +46,7 @@ byte order:    little-endian
 system:        LINUX
 cli:           no
 libx264:       internal
-shared:        yes
+shared:        no
 static:        yes
 asm:           no
 interlaced:    yes
@@ -124,7 +55,7 @@ lavf:          no
 ffms:          no
 mp4:           no
 gpl:           yes
-thread:        no
+thread:        posix
 opencl:        yes
 filters:       crop select_every 
 lto:           no
