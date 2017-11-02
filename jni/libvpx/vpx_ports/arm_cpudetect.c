@@ -90,27 +90,7 @@ int arm_cpu_caps(void) {
 #endif /* HAVE_NEON || HAVE_NEON_ASM */
   return flags & mask;
 }
-
-#elif defined(__ANDROID__) /* end _MSC_VER */
-#include <cpu-features.h>
-
-int arm_cpu_caps(void) {
-  int flags;
-  int mask;
-  uint64_t features;
-  if (!arm_cpu_env_flags(&flags)) {
-    return flags;
-  }
-  mask = arm_cpu_env_mask();
-  features = android_getCpuFeatures();
-
-#if HAVE_NEON || HAVE_NEON_ASM
-  if (features & ANDROID_CPU_ARM_FEATURE_NEON) flags |= HAS_NEON;
-#endif /* HAVE_NEON || HAVE_NEON_ASM */
-  return flags & mask;
-}
-
-#elif defined(__linux__) /* end __ANDROID__ */
+#elif defined(__linux__) || defined(__ANDROID__) /* end __ANDROID__ */
 
 #include <stdio.h>
 
