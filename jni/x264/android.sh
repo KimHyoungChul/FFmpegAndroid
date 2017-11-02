@@ -23,7 +23,7 @@ __internal_build_env_armeabi_v5a(){
       LD=$CROSS"ld"
       GCC_LIB=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9/libgcc.a
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -marm -march=arm -fvisibility=hidden
-      DISABLE_ASM="--disable-asm"
+      DISABLE_ASM=""
 }
 
 __internal_build_env_armeabi_v7a(){
@@ -35,7 +35,7 @@ __internal_build_env_armeabi_v7a(){
       LD=$CROSS"ld"
       GCC_LIB=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9/libgcc.a
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -mfloat-abi=softfp -mfpu=neon -marm -march=arm -fvisibility=hidden
-      DISABLE_ASM="--disable-asm"
+      DISABLE_ASM=""
 }
 
 __internal_build_env_aarch64_v8a(){
