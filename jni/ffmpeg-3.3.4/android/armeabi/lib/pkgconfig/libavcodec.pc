@@ -9,6 +9,6 @@ Version: 57.89.100
 Requires: libswresample >= 2.7.100, libavutil >= 55.58.100
 Requires.private: 
 Conflicts:
-Libs: -L${libdir}  -lavcodec -ldl -lm -lz -pthread
+Libs: -L${libdir}  -lavcodec -Landroid/armeabi/lib -lx264 -lm -ldl -ldl -lm -lz -pthread
 Libs.private: 
 Cflags: -I${includedir}

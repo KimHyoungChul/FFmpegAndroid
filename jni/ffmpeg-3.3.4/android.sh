@@ -16,6 +16,11 @@ export CC_FLAGS=
 export PREFIX=
 export PREFIX_LIB=
 
+export LIBX264_HOST=/home/ring0/git/FFmpegAndroid/jni/x264
+export LIBX264_INC=
+export LIBX264_LIB=
+export LIBX264_SHARED=
+
 __internal_build_env_armeabi_v5a(){
       PREBUILT=$NDK/toolchains/arm-linux-androideabi-4.8/prebuilt
       PLATFORM=$NDK/platforms/android-21/arch-arm
@@ -28,6 +33,9 @@ __internal_build_env_armeabi_v5a(){
       PREFIX=android/armeabi
       PREFIX_LIB=lib
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -marm -march=arm -fvisibility=hidden
+      LIBX264_INC=$LIBX264_HOST/$PREFIX/include
+      LIBX264_LIB=$LIBX264_HOST/$PREFIX/lib
+      LIBX264_SHARED=$LIBX264_HOST/$PREFIX
 }
 
 __internal_build_env_armeabi_v7a(){
@@ -42,6 +50,10 @@ __internal_build_env_armeabi_v7a(){
       PREFIX=android/armeabi-v7a
       PREFIX_LIB=lib
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -mfloat-abi=softfp -mfpu=neon -marm -march=arm -fvisibility=hidden
+
+      LIBX264_INC=$LIBX264_HOST/$PREFIX/include
+      LIBX264_LIB=$LIBX264_HOST/$PREFIX/lib
+      LIBX264_SHARED=$LIBX264_HOST/$PREFIX
 }
 
 __internal_build_env_aarch64_v8a(){
@@ -56,6 +68,10 @@ __internal_build_env_aarch64_v8a(){
       PREFIX=android/arm64-v8a
       PREFIX_LIB=lib
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -mfloat-abi=softfp -mfpu=neon -marm -march=arm64 -fvisibility=hidden
+
+      LIBX264_INC=$LIBX264_HOST/$PREFIX/include
+      LIBX264_LIB=$LIBX264_HOST/$PREFIX/lib
+      LIBX264_SHARED=$LIBX264_HOST/$PREFIX
 }
 
 __internal_build_env_intel_x86(){
@@ -70,6 +86,10 @@ __internal_build_env_intel_x86(){
       PREFIX=android/x86
       PREFIX_LIB=lib
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -mssse3 -mavx -fvisibility=hidden
+
+      LIBX264_INC=$LIBX264_HOST/$PREFIX/include
+      LIBX264_LIB=$LIBX264_HOST/$PREFIX/lib
+      LIBX264_SHARED=$LIBX264_HOST/$PREFIX
 }
 
 __internal_build_env_intel_x86_64(){
@@ -84,6 +104,10 @@ __internal_build_env_intel_x86_64(){
       PREFIX=android/x86_64
       PREFIX_LIB=lib64
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -mssse3 -mavx -fvisibility=hidden
+
+      LIBX264_INC=$LIBX264_HOST/$PREFIX/include
+      LIBX264_LIB=$LIBX264_HOST/$PREFIX/lib
+      LIBX264_SHARED=$LIBX264_HOST/$PREFIX
 }
 
 __internal_build_env_mips32(){
@@ -98,6 +122,10 @@ __internal_build_env_mips32(){
       PREFIX=android/mips
       PREFIX_LIB=lib
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated
+
+      LIBX264_INC=$LIBX264_HOST/$PREFIX/include
+      LIBX264_LIB=$LIBX264_HOST/$PREFIX/lib
+      LIBX264_SHARED=$LIBX264_HOST/$PREFIX
 }
 
 __internal_build_env_mips64(){
@@ -112,66 +140,78 @@ __internal_build_env_mips64(){
       PREFIX=android/mips64
       PREFIX_LIB=lib
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -mhard-float -mmsa -mdsp -mdspr2
+
+      LIBX264_INC=$LIBX264_HOST/$PREFIX/include
+      LIBX264_LIB=$LIBX264_HOST/$PREFIX/lib
+      LIBX264_SHARED=$LIBX264_HOST/$PREFIX
 }
 
 __internal_build_general(){
-      ./configure --target-os=android         \
-            --prefix=$PREFIX                  \
-            --cc=$CC                          \
-            --cross-prefix=$CROSS             \
-            --nm=$NM                          \
-            --sysroot=$PLATFORM               \
-            --arch=$ARCH                      \
-            --enable-cross-compile            \
-            --enable-runtime-cpudetect        \
-            --enable-gpl                      \
-            --enable-nonfree                  \
-            --enable-version3                 \
-            --enable-small                    \
-            --enable-zlib                     \
-            --enable-bsfs                     \
-            --enable-parsers                  \
-            --enable-swscale                  \
-            --enable-avresample               \
-            --disable-stripping               \
-            --disable-ffprobe                 \
-            --disable-ffplay                  \
-            --disable-ffmpeg                  \
-            --disable-ffserver                \
-            --disable-debug                   \
-            --enable-static                   \
-            --disable-shared                  \
-            --enable-jni                      \
-            --enable-mediacodec               \
-            --enable-decoder=mpeg4_mediacodec \
-            --enable-decoder=h264_mediacodec  \
-            --enable-decoder=hevc_mediacodec  \
-            --enable-decoder=vp8_mediacodec   \
-            --enable-decoder=vp9_mediacodec   \
-            --extra-cflags=$CC_FLAGS
+      export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$LIBX264_LIB/pkgconfig
+      ./configure --target-os=android                         \
+            --prefix=$PREFIX                                  \
+            --cc=$CC                                          \
+            --cross-prefix=$CROSS                             \
+            --nm=$NM                                          \
+            --sysroot=$PLATFORM                               \
+            --arch=$ARCH                                      \
+            --enable-cross-compile                            \
+            --enable-runtime-cpudetect                        \
+            --enable-gpl                                      \
+            --enable-nonfree                                  \
+            --enable-version3                                 \
+            --enable-small                                    \
+            --enable-zlib                                     \
+            --enable-bsfs                                     \
+            --enable-parsers                                  \
+            --enable-swscale                                  \
+            --enable-avresample                               \
+            --disable-stripping                               \
+            --disable-ffprobe                                 \
+            --disable-ffplay                                  \
+            --disable-ffmpeg                                  \
+            --disable-ffserver                                \
+            --disable-debug                                   \
+            --enable-static                                   \
+            --disable-shared                                  \
+            --enable-jni                                      \
+            --enable-mediacodec                               \
+            --enable-decoder=mpeg4_mediacodec                 \
+            --enable-decoder=h264_mediacodec                  \
+            --enable-decoder=hevc_mediacodec                  \
+            --enable-decoder=vp8_mediacodec                   \
+            --enable-decoder=vp9_mediacodec                   \
+            --enable-libx264                                  \
+            --enable-encoder=libx264                          \
+            --extra-cflags="$CC_FLAGS -lx264 -I $LIBX264_INC" \
+            --extra-ldflags="-L$LIBX264_LIB"                  \
+            --pkg-config=pkg-config                           \
+            --pkg-config-flags="--static --libs"
 }
 __internal_build_shread(){
-      $LD -rpath-link=$PLATFORM/usr/$PREFIX_LIB \
-            -L$PLATFORM/usr/$PREFIX_LIB \
-            -L$PREFIX/lib \
-            -soname libffmpeg.so \
-            -shared \
-            -nostdlib \
-            -Bsymbolic \
-            --whole-archive \
-            --no-undefined \
-            -o $PREFIX/libffmpeg.so \
-            $PREFIX/lib/libavcodec.a \
-            $PREFIX/lib/libavfilter.a \
-            $PREFIX/lib/libswresample.a \
-            $PREFIX/lib/libavformat.a \
-            $PREFIX/lib/libavutil.a \
-            $PREFIX/lib/libswscale.a \
-            $PREFIX/lib/libpostproc.a \
-            $PREFIX/lib/libavdevice.a \
-            $PREFIX/lib/libavresample.a \
-            -lc -lm -lz -ldl -llog \
-            --dynamic-linker=/system/bin/linker $PREBUILT/linux-x86_64/lib/gcc/$GCC_PREFIX
+      $LD -rpath-link=$PLATFORM/usr/$PREFIX_LIB               \
+            -L$PLATFORM/usr/$PREFIX_LIB                       \
+            -L$LIBX264_SHARED                                 \
+            -L$PREFIX/lib                                     \
+            -soname libffmpeg.so                              \
+            -shared                                           \
+            -nostdlib                                         \
+            -Bsymbolic                                        \
+            --whole-archive                                   \
+            --no-undefined                                    \
+            -o $PREFIX/libffmpeg.so                           \
+            $PREFIX/lib/libavcodec.a                          \
+            $PREFIX/lib/libavfilter.a                         \
+            $PREFIX/lib/libswresample.a                       \
+            $PREFIX/lib/libavformat.a                         \
+            $PREFIX/lib/libavutil.a                           \
+            $PREFIX/lib/libswscale.a                          \
+            $PREFIX/lib/libpostproc.a                         \
+            $PREFIX/lib/libavdevice.a                         \
+            $PREFIX/lib/libavresample.a                       \
+            -lc -lm -lz -ldl -llog -lx264                     \
+            --dynamic-linker=/system/bin/linker               \
+            $PREBUILT/linux-x86_64/lib/gcc/$GCC_PREFIX
 }
 
 build_armeabi_v5a(){
