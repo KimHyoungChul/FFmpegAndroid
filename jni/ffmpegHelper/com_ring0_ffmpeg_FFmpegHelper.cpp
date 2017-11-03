@@ -289,7 +289,7 @@ char* get_decoder_char(int decoder_type) {
     }
     return result;
 }
-char* get_encoder_str(int encoder_type) {
+char* get_encoder_char(int encoder_type) {
     char *result = "";
     switch (encoder_type) {
     case FFMPEG_ENCODER_MPEG4:
@@ -1189,11 +1189,12 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1decode
 
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1encoder
   (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath, jint width, jint height, jint encoder_type) {
+
     char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
     char *path = (char*)env->GetStringUTFChars(jpath, 0);
 
     char *dstfile = (char*)malloc(sizeof(char) * 1024);
-    sprintf(dstfile, "%s/%s_%dx%d.%s", path, get_encoder_type(encoder_type), width, height, get_encoder_type(encoder_type));
+    sprintf(dstfile, "%s/%s_%dx%d.%s", path, get_encoder_char(encoder_type), width, height, get_encoder_char(encoder_type));
     FILE *file_src = fopen(srcfile, "rb+");
     FILE *file_dst = fopen(dstfile, "wb+");
 
@@ -1234,10 +1235,12 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1encode
     pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
     av_image_alloc(pFrame->data, pFrame->linesize, pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P, 16);
     // 读取数据并且编码
-    while (!feof(file_src)) {
-        fread(pFrame->data[0], 1,  width * height,      file_src);
-        fread(pFrame->data[1], 1, (width * height) / 4, file_src);
-        fread(pFrame->data[2], 1, (width * height) / 4, file_src);
+    while (1) {
+    	if (fread(pFrame->data[0], 1, width * height, file_src) <= 0 ||
+    			fread(pFrame->data[1], 1, (width * height) / 4, file_src) <= 0 ||
+    			fread(pFrame->data[2], 1, (width * height) / 4, file_src) <= 0) {
+    		break;
+    	}
         pFrame->width  = width;
         pFrame->height = height;
         pFrame->pts    = frame_cnt;
@@ -1249,23 +1252,21 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1encode
         if (ret < 0) {
             break;
         }
-        if (!got_picture) {
-            break;
+        if (got_picture) {
+			frame_cnt++;
+			fwrite(pPacket->data, 1, pPacket->size, file_dst);
+			av_free_packet(pPacket);
         }
-        frame_cnt++;
-        fwrite(pPacket->data, 1, pPacket->size, file_dst);
-        av_free_packet(pPacket);
     }
     while (1) {
         int ret = avcodec_encode_video2(pCodecCtx, pPacket, pFrame, &got_picture);
         if (ret < 0) {
             break;
         }
-        if (!got_picture) {
-            break;
+        if (got_picture) {
+			fwrite(pPacket->data, 1, pPacket->size, file_dst);
+			av_free_packet(pPacket);
         }
-        fwrite(pPacket->data, 1, pPacket->size, file_dst);
-        av_free_packet(pPacket);
     }
 
     avcodec_close(pCodecCtx);

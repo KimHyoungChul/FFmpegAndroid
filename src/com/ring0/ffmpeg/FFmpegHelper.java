@@ -2,6 +2,7 @@ package com.ring0.ffmpeg;
 
 public class FFmpegHelper {
     static {
+        System.loadLibrary("x264");
         System.loadLibrary("ffmpeg");
         System.loadLibrary("ffmpegHelper");
     }

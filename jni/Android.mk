@@ -36,6 +36,15 @@ LOCAL_CFLAGS            +=  -fvisibility=hidden
 LOCAL_LDLIBS            :=  -llog -landroid -lm -lz -lOpenSLES
 include $(BUILD_SHARED_LIBRARY)
 ###############################################################################
+#       x264
+#       author:zd
+###############################################################################
+include $(CLEAR_VARS)
+LOCAL_MODULE            :=  x264
+LOCAL_SRC_FILES         :=  x264/android/$(TARGET_ARCH_ABI)/libx264.so
+LOCAL_LDLIBS            +=  -L$(SYSROOT)/usr/lib -llog
+include $(PREBUILT_SHARED_LIBRARY)
+###############################################################################
 #       ffmpeg
 #       author:zd
 ###############################################################################
@@ -43,4 +52,5 @@ include $(CLEAR_VARS)
 LOCAL_MODULE            :=  ffmpeg
 LOCAL_SRC_FILES         :=  ffmpeg-3.3.4/android/$(TARGET_ARCH_ABI)/libffmpeg.so
 LOCAL_LDLIBS            +=  -L$(SYSROOT)/usr/lib -llog
+LOCAL_SHARED_LIBRARIES  :=  x264
 include $(PREBUILT_SHARED_LIBRARY)
