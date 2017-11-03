@@ -1243,6 +1243,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1encode
     	}
         pFrame->width  = width;
         pFrame->height = height;
+        pFrame->format = AV_PIX_FMT_YUV420P;
         pFrame->pts    = frame_cnt;
 
         av_init_packet(pPacket);
