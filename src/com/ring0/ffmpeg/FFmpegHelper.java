@@ -104,4 +104,6 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg_decoder(String srcfile, String path, int decoder_type);
     // 精简的编码器
     public static native void simple_ffmpeg_encoder(String srcfile, String path, int width, int hegiht, int encoder_type);
+    // 间的的音频播放器
+    public static native void simple_ffmpeg_audio_player(String filename);
 }

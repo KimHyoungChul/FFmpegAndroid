@@ -7,6 +7,8 @@
 #include <pthread.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <SLES/OpenSLES.h>
+#include <SLES/OpenSLES_Android.h>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -57,6 +59,38 @@ extern "C" {
 #define FFMPEG_ENCODER_H265    2
 #define FFMPEG_ENCODER_VP8     3
 #define FFMPEG_ENCODER_VP9     4
+
+static       SLObjectItf                   g_sl_object          = 0;
+static       SLEngineItf                   g_sl_engine          = 0;
+static       SLObjectItf                   g_sl_mixobject       = 0;
+static       SLEnvironmentalReverbItf      g_sl_reverb          = 0;
+static const SLEnvironmentalReverbSettings g_sl_reverb_settings = SL_I3DL2_ENVIRONMENT_PRESET_STONECORRIDOR;
+
+static       SLObjectItf                   l_sl_player          = 0;
+static       SLPlayItf                     l_sl_play            = 0;
+static       SLSeekItf                     l_sl_seek            = 0;
+static       SLMuteSoloItf                 l_sl_solo            = 0;
+static       SLVolumeItf                   l_sl_volume          = 0;
+static       SLAndroidSimpleBufferQueueItf l_sl_queue           = 0;
+static       SLEffectSendItf               l_sl_effect          = 0;
+
+static       AVFormatContext              *pFormatCtx           = 0;
+static       AVCodecContext               *pCodecCtx            = 0;
+static       AVCodec                      *pCodec               = 0;
+static       AVFrame                      *pFrame               = 0;
+static       AVPacket                     *pPacket              = 0;
+static       SwrContext                   *pSwrCtx              = 0;
+static       int                           audio_index          = -1;
+static       int                           got_picture          = 0;
+
+static       AVSampleFormat                out_sample_fmt       = AV_SAMPLE_FMT_U8;
+static       int                           out_sample_rate      = 44100;
+static       int                           out_channel_layout   = 2;
+
+struct Data {
+    void *buffer;
+    int   size;
+};
 /**
  *  返回 ffmpeg 中的像素格式
  */
@@ -309,6 +343,24 @@ char* get_encoder_char(int encoder_type) {
         break;
     }
     return result;
+}
+
+void android_opensles_create_engine();
+void android_opensles_stop();
+void android_opensles_play_buffer(int, int);
+void android_opensles_callback(SLAndroidSimpleBufferQueueItf, void*);
+/**
+ *  libffmpegHelper.so 被加载
+ */
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
+    android_opensles_create_engine();
+    return JNI_VERSION_1_4;
+}
+/**
+ *  libffmpegHelper.so 被卸载
+ */
+JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved) {
+    android_opensles_stop();
 }
 /**
  *  将媒体文件分离出 yuv 像素数据
@@ -1278,4 +1330,139 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1encode
     free(dstfile);
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jpath, path);
+}
+
+void android_opensles_create_engine() {
+    // 创建播放引擎
+    slCreateEngine(&g_sl_object, 0, 0, 0, 0, 0);
+    // 非同步
+    (*g_sl_object)->Realize(g_sl_object, SL_BOOLEAN_FALSE);
+    // 获取 opensles SLEngineITF 的对象
+    (*g_sl_object)->GetInterface(g_sl_object, SL_IID_ENGINE, &g_sl_engine);
+
+    const SLInterfaceID ids[1] = {SL_IID_ENVIRONMENTALREVERB};
+    const SLboolean     req[1] = {SL_BOOLEAN_FALSE};
+    // 获取混音器
+    (*g_sl_engine)->CreateOutputMix(g_sl_engine, &g_sl_mixobject, 1, ids, req);
+    // 初始化混音器
+    (*g_sl_mixobject)->Realize(g_sl_mixobject, SL_BOOLEAN_FALSE);
+    SLresult result = (*g_sl_mixobject)->GetInterface(g_sl_mixobject, SL_IID_ENVIRONMENTALREVERB, &g_sl_reverb);
+    if (SL_RESULT_SUCCESS == result) {
+        (*g_sl_reverb)->SetEnvironmentalReverbProperties(g_sl_reverb, &g_sl_reverb_settings);
+    }
+}
+
+void android_opensles_stop() {
+    if (l_sl_play) {
+        (*l_sl_play)->SetPlayState(l_sl_play, SL_PLAYSTATE_STOPPED);
+        (*l_sl_player)->Destroy(l_sl_player);
+        l_sl_play   = 0;
+        l_sl_player = 0;
+        l_sl_seek   = 0;
+        l_sl_solo   = 0;
+        l_sl_volume = 0;
+    }
+}
+
+void android_opensles_play_buffer(int channel, int sample) {
+    SLDataLocator_AndroidSimpleBufferQueue sl_queue = {
+            SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
+    SLDataFormat_PCM sl_pcm = {
+            SL_DATAFORMAT_PCM,
+            channel,                      // numChannels
+            sample * 1000,                // samplesPerSec
+            SL_PCMSAMPLEFORMAT_FIXED_8,   // bitsPerSample
+            SL_PCMSAMPLEFORMAT_FIXED_8,   // containerSize
+            SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT, // channelMask
+            SL_BYTEORDER_LITTLEENDIAN     // endianness
+    };
+    SLDataSource            sl_source = {&sl_queue, &sl_pcm};
+    SLDataLocator_OutputMix sl_mix    = {SL_DATALOCATOR_OUTPUTMIX, g_sl_mixobject};
+    SLDataSink              sl_sink   = {&sl_mix, 0};
+
+    const SLInterfaceID ids[3] = {SL_IID_BUFFERQUEUE, SL_IID_EFFECTSEND, SL_IID_VOLUME};
+    const SLboolean     req[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+
+    (*g_sl_engine)->CreateAudioPlayer(g_sl_engine, &l_sl_player,  &sl_source, &sl_sink, 3, ids, req);
+    (*l_sl_player)->Realize(        l_sl_player, SL_BOOLEAN_FALSE);
+    (*l_sl_player)->GetInterface(   l_sl_player, SL_IID_PLAY,                 &l_sl_play);
+    (*l_sl_player)->GetInterface(   l_sl_player, SL_IID_BUFFERQUEUE,          &l_sl_queue);
+    (*l_sl_player)->GetInterface(   l_sl_player, SL_IID_EFFECTSEND,           &l_sl_effect);
+    (*l_sl_player)->GetInterface(   l_sl_player, SL_IID_VOLUME,               &l_sl_volume);
+
+    (*l_sl_queue)->RegisterCallback(l_sl_queue,  android_opensles_callback,   0);
+    (*l_sl_play)->SetPlayState(     l_sl_play,   SL_PLAYSTATE_PLAYING);
+    android_opensles_callback(l_sl_queue, 0);
+}
+
+void android_opensles_callback(SLAndroidSimpleBufferQueueItf queue, void *data) {
+    while (av_read_frame(pFormatCtx, pPacket) >= 0) {
+        if (pPacket->stream_index == audio_index) {
+            int ret = avcodec_decode_audio4(pCodecCtx, pFrame, &got_picture, pPacket);
+            if (ret < 0) {
+                break;
+            }
+            if (got_picture) {
+                int size = av_samples_get_buffer_size(pFrame->linesize, 2, 44100, out_sample_fmt, 1);
+                char *pcm = (char*) malloc(sizeof(char) * size);
+                swr_convert(pSwrCtx, (uint8_t**) &pcm, out_sample_rate, (const uint8_t**) pFrame->extended_data, pFrame->nb_samples);
+                (*queue)->Enqueue(queue, pcm, size);
+                //free(pcm);
+                return;
+            }
+        }
+        av_free_packet(pPacket);
+    }
+    av_frame_free(&pFrame);
+    avcodec_free_context(&pCodecCtx);
+    avformat_close_input(&pFormatCtx);
+    swr_free(&pSwrCtx);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_1player
+  (JNIEnv *env, jclass, jstring jfilename) {
+    char *filename = (char*)env->GetStringUTFChars(jfilename, 0);
+    av_register_all();
+    avformat_network_init();
+    pFormatCtx = avformat_alloc_context();
+    if (avformat_open_input(&pFormatCtx, filename, 0, 0) != 0) {
+        // avformat_open_input error
+        return;
+    }
+    if (avformat_find_stream_info(pFormatCtx, 0) < 0) {
+        // avformat_find_stream_info error
+        return;
+    }
+    for (int i = 0; i < pFormatCtx->nb_streams; i++) {
+        if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audio_index = i;
+            break;
+        }
+    }
+    if (audio_index == -1) {
+        // not found audio stream
+        return;
+    }
+    pCodecCtx = pFormatCtx->streams[audio_index]->codec;
+    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    if (!pCodec) {
+        // not found decoder
+        return;
+    }
+    if (avcodec_open2(pCodecCtx, pCodec, 0) != 0) {
+        // avcodec_open2 error
+        return;
+    }
+    pFrame = av_frame_alloc();
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_init_packet(pPacket);
+    pSwrCtx = swr_alloc();
+    av_opt_set_int(pSwrCtx, "in_sample_fmt",      pCodecCtx->sample_fmt,     0);
+    av_opt_set_int(pSwrCtx, "in_sample_rate",     pCodecCtx->sample_rate,    0);
+    av_opt_set_int(pSwrCtx, "in_channel_layout",  pCodecCtx->channel_layout, 0);
+    av_opt_set_int(pSwrCtx, "out_sample_fmt",     out_sample_fmt,            0);
+    av_opt_set_int(pSwrCtx, "out_sample_rate",    out_sample_rate,           0);
+    av_opt_set_int(pSwrCtx, "out_channel_layout", out_channel_layout,        0);
+    swr_init(pSwrCtx);
+    android_opensles_play_buffer(out_channel_layout, out_sample_rate);
 }
