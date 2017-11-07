@@ -349,6 +349,10 @@ void android_opensles_create_engine();
 void android_opensles_stop();
 void android_opensles_play_buffer(int, int);
 void android_opensles_callback(SLAndroidSimpleBufferQueueItf, void*);
+
+void ff_log_callback(void *ptr, int level, const char*fmt, va_list va) {
+    __android_log_print(ANDROID_LOG_INFO, "zd-ffmpeg", fmt, va);
+}
 /**
  *  libffmpegHelper.so 被加载
  */
@@ -1483,18 +1487,20 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1v
     AVFrame         *pFrame     = 0;
     av_register_all();
     avcodec_register_all();
+    av_log_set_callback(ff_log_callback);
 
     pFormatCtx = avformat_alloc_context();
     pOutCtx = av_guess_format("mp4", videofile, "");
     pFormatCtx->oformat = pOutCtx;
     sprintf(pFormatCtx->filename, "%s", videofile);
-    if (pOutCtx->video_codec == AV_CODEC_ID_NONE) {
+
+    if (pOutCtx->video_codec != AV_CODEC_ID_NONE) {
         pStream = avformat_new_stream(pFormatCtx, 0);
         pCodecCtx = pStream->codec;
         pCodecCtx->codec_id = pOutCtx->video_codec;
         pCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
 
-        pCodecCtx->bit_rate = 400000;
+        pCodecCtx->bit_rate = 4000;
         pCodecCtx->width  = width;
         pCodecCtx->height = height;
         pCodecCtx->time_base.num = 1;
@@ -1505,7 +1511,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1v
             pCodecCtx->max_b_frames = 2;
         }
         if (pOutCtx->video_codec == AV_CODEC_ID_MPEG1VIDEO) {
-            pCodecCtx->max_b_frames = 1;
+            pCodecCtx->mb_decision = 2;
         }
         if (!strcmp(pOutCtx->name, "mp4") || !strcmp(pOutCtx->name, "mov") || !strcmp(pOutCtx->name, "3gp")) {
             pCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -1521,8 +1527,11 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1v
     if (!pCodec) {
         return;
     }
-    if (avcodec_open2(pCodecCtx, pCodec, 0) < 0) {
+    if (avcodec_open2(pCodecCtx, pCodec, 0) != 0) {
         return;
+    }
+    if (pCodecCtx->codec_id == AV_CODEC_ID_H264) {
+        av_opt_set(pCodecCtx->priv_data, "preset", "slow", 0);
     }
     pFrame = av_frame_alloc();
     int size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, width, height, 1);
