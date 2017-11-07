@@ -1466,3 +1466,114 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_
     swr_init(pSwrCtx);
     android_opensles_play_buffer(out_channel_layout, out_sample_rate);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1video
+  (JNIEnv *env, jclass, jstring jyuvfile, jstring jvideofile, jint width, jint height) {
+    char *yuvfile = (char*)env->GetStringUTFChars(jyuvfile, 0);
+    char *videofile = (char*)env->GetStringUTFChars(jvideofile, 0);
+
+    FILE *file_yuv = fopen(yuvfile, "rb+");
+    char *yuv_buff = (char*)malloc(width * height * 3 / 2);
+
+    AVFormatContext *pFormatCtx = 0;
+    AVCodecContext  *pCodecCtx  = 0;
+    AVOutputFormat  *pOutCtx    = 0;
+    AVCodec         *pCodec     = 0;
+    AVStream        *pStream    = 0;
+    AVFrame         *pFrame     = 0;
+    av_register_all();
+    avcodec_register_all();
+
+    pFormatCtx = avformat_alloc_context();
+    pOutCtx = av_guess_format("mp4", videofile, "");
+    pFormatCtx->oformat = pOutCtx;
+    sprintf(pFormatCtx->filename, "%s", videofile);
+    if (pOutCtx->video_codec == AV_CODEC_ID_NONE) {
+        pStream = avformat_new_stream(pFormatCtx, 0);
+        pCodecCtx = pStream->codec;
+        pCodecCtx->codec_id = pOutCtx->video_codec;
+        pCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
+
+        pCodecCtx->bit_rate = 400000;
+        pCodecCtx->width  = width;
+        pCodecCtx->height = height;
+        pCodecCtx->time_base.num = 1;
+        pCodecCtx->time_base.den = 25;
+        pCodecCtx->gop_size = 12;
+        pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+        if (pOutCtx->video_codec == AV_CODEC_ID_MPEG2VIDEO) {
+            pCodecCtx->max_b_frames = 2;
+        }
+        if (pOutCtx->video_codec == AV_CODEC_ID_MPEG1VIDEO) {
+            pCodecCtx->max_b_frames = 1;
+        }
+        if (!strcmp(pOutCtx->name, "mp4") || !strcmp(pOutCtx->name, "mov") || !strcmp(pOutCtx->name, "3gp")) {
+            pCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+        }
+    }
+    if (!pStream) {
+        return;
+    }
+    if (!pCodecCtx) {
+        return;
+    }
+    pCodec = avcodec_find_encoder(pCodecCtx->codec_id);
+    if (!pCodec) {
+        return;
+    }
+    if (avcodec_open2(pCodecCtx, pCodec, 0) < 0) {
+        return;
+    }
+    pFrame = av_frame_alloc();
+    int size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, width, height, 1);
+    av_image_fill_arrays(pFrame->data, pFrame->linesize, (const uint8_t*)av_malloc(sizeof(char) * size), AV_PIX_FMT_YUV420P, width, height, 1);
+    avformat_write_header(pFormatCtx, 0);
+    double pts = 0.0;
+    while (!feof(file_yuv)) {
+        fread(pFrame->data[0], 1, width * height, file_yuv);
+        fread(pFrame->data[1], 1, (width * height) / 4, file_yuv);
+        fread(pFrame->data[2], 1, (width * height) / 4, file_yuv);
+        if (pStream) {
+            pts = (double)(pStream->pts.val * (pStream->time_base.num / pStream->time_base.den));
+        }
+        else {
+            pts = 0.0;
+        }
+
+        if (pFormatCtx->oformat->flags & AVFMT_RAWPICTURE) {
+            AVPacket packet;
+            av_init_packet(&packet);
+            packet.flags |= AV_PKT_FLAG_KEY;
+            packet.stream_index = pStream->index;
+            packet.data = (uint8_t*)pFrame->data;
+            packet.size = width * height * 3 / 2;
+            av_write_frame(pFormatCtx, &packet);
+        }
+        else {
+            AVPacket packet;
+            int got_picture;
+            av_init_packet(&packet);
+            int ret = avcodec_encode_video2(pCodecCtx, &packet, pFrame, &got_picture);
+            if (ret < 0) {
+                break;
+            }
+            if (got_picture) {
+                packet.pts = av_rescale_q(pCodecCtx->coded_frame->pts, pCodecCtx->time_base, pStream->time_base);
+                packet.stream_index = pStream->index;
+                if (pCodecCtx->coded_frame->key_frame) {
+                    packet.flags |= AV_PKT_FLAG_KEY;
+                }
+                av_write_frame(pFormatCtx, &packet);
+            }
+        }
+    }
+    av_write_trailer(pFormatCtx);
+    for (int i = 0; i < pFormatCtx->nb_streams; i++) {
+        av_freep(&pFormatCtx->streams[i]->codec);
+        av_freep(&pFormatCtx->streams[i]);
+    }
+    avcodec_close(pCodecCtx);
+
+    env->ReleaseStringUTFChars(jyuvfile, yuvfile);
+    env->ReleaseStringUTFChars(jvideofile, videofile);
+}
