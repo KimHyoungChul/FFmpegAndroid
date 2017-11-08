@@ -1193,6 +1193,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1decode
             if (!got_picture) {
                 break;
             }
+            __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "decoder frame");
             // save y
             for (int i = 0; i < pFrame->height; i++) {
                 fwrite(pFrame->data[0] + (pFrame->linesize[0] * i), 1, pFrame->linesize[0], file_dst);
@@ -1218,6 +1219,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1decode
         if (!got_picture) {
             break;
         }
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "flush decoder frame");
         // save y
         for (int i = 0; i < pFrame->height; i++) {
             fread(pFrame->data[0] + (pFrame->linesize[0] * i), 1, pFrame->linesize[0], file_dst);
@@ -1490,10 +1492,11 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1v
     av_log_set_callback(ff_log_callback);
 
     pFormatCtx = avformat_alloc_context();
-    pOutCtx = av_guess_format("mp4", videofile, "");
+    pOutCtx = av_guess_format("mp4", 0, 0);
     pFormatCtx->oformat = pOutCtx;
-    sprintf(pFormatCtx->filename, "%s", videofile);
-
+    if (avio_open(&pFormatCtx->pb, videofile, AVIO_FLAG_READ_WRITE) < 0) {
+        return;
+    }
     if (pOutCtx->video_codec != AV_CODEC_ID_NONE) {
         pStream = avformat_new_stream(pFormatCtx, 0);
         pCodecCtx = pStream->codec;
@@ -1507,6 +1510,13 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1v
         pCodecCtx->time_base.den = 25;
         pCodecCtx->gop_size = 12;
         pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+        if (pOutCtx->video_codec == AV_CODEC_ID_H264) {
+            pCodecCtx->me_range = 16;
+            pCodecCtx->max_qdiff = 4;
+            pCodecCtx->qmin = 10;
+            pCodecCtx->qmax = 51;
+            pCodecCtx->qcompress = 0.6;
+        }
         if (pOutCtx->video_codec == AV_CODEC_ID_MPEG2VIDEO) {
             pCodecCtx->max_b_frames = 2;
         }
@@ -1537,17 +1547,15 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1v
     int size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, width, height, 1);
     av_image_fill_arrays(pFrame->data, pFrame->linesize, (const uint8_t*)av_malloc(sizeof(char) * size), AV_PIX_FMT_YUV420P, width, height, 1);
     avformat_write_header(pFormatCtx, 0);
-    double pts = 0.0;
+    int frame_cnt = 0;
     while (!feof(file_yuv)) {
         fread(pFrame->data[0], 1, width * height, file_yuv);
         fread(pFrame->data[1], 1, (width * height) / 4, file_yuv);
         fread(pFrame->data[2], 1, (width * height) / 4, file_yuv);
-        if (pStream) {
-            pts = (double)(pStream->pts.val * (pStream->time_base.num / pStream->time_base.den));
-        }
-        else {
-            pts = 0.0;
-        }
+        pFrame->width = width;
+        pFrame->height = height;
+        pFrame->format = AV_PIX_FMT_YUV420P;
+        pFrame->pts = frame_cnt++;
 
         if (pFormatCtx->oformat->flags & AVFMT_RAWPICTURE) {
             AVPacket packet;
@@ -1557,6 +1565,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1v
             packet.data = (uint8_t*)pFrame->data;
             packet.size = width * height * 3 / 2;
             av_write_frame(pFormatCtx, &packet);
+            __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "write frame(raw)");
         }
         else {
             AVPacket packet;
@@ -1573,16 +1582,14 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1v
                     packet.flags |= AV_PKT_FLAG_KEY;
                 }
                 av_write_frame(pFormatCtx, &packet);
+                __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "write frame(encoder)");
             }
         }
     }
+    //avcodec_close(pCodecCtx);
     av_write_trailer(pFormatCtx);
-    for (int i = 0; i < pFormatCtx->nb_streams; i++) {
-        av_freep(&pFormatCtx->streams[i]->codec);
-        av_freep(&pFormatCtx->streams[i]);
-    }
-    avcodec_close(pCodecCtx);
-
+    fclose(file_yuv);
+    free(yuv_buff);
     env->ReleaseStringUTFChars(jyuvfile, yuvfile);
     env->ReleaseStringUTFChars(jvideofile, videofile);
 }
