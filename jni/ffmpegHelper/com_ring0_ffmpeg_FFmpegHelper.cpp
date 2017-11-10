@@ -1586,10 +1586,97 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1v
             }
         }
     }
-    //avcodec_close(pCodecCtx);
     av_write_trailer(pFormatCtx);
+    avcodec_close(pCodecCtx);
+    avio_close(pFormatCtx->pb);
+    avformat_free_context(pFormatCtx);
+
     fclose(file_yuv);
     free(yuv_buff);
     env->ReleaseStringUTFChars(jyuvfile, yuvfile);
     env->ReleaseStringUTFChars(jvideofile, videofile);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1picture
+  (JNIEnv *env, jclass, jstring jyuvfile, jstring jpicfile, jint width, jint height) {
+    char *yuvfile = (char*)env->GetStringUTFChars(jyuvfile, 0);
+    char *picfile = (char*)env->GetStringUTFChars(jpicfile, 0);
+
+    FILE *file_yuv  = fopen(yuvfile, "rb+");
+    char *file_buff = (char*)malloc(width * height * 3 / 2);
+    fread(file_buff, 1, width * height * 3 / 2, file_yuv);
+
+    AVFormatContext *pFormatCtx  = 0;
+    AVOutputFormat  *pOutputCtx  = 0;
+    AVCodecContext  *pCodecCtx   = 0;
+    AVStream        *pStream     = 0;
+    AVCodec         *pCodec      = 0;
+    AVPacket        *pPacket     = 0;
+    AVFrame         *pFrame      = 0;
+    int              got_picture = 0;
+
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    pOutputCtx = av_guess_format("mjpeg", 0, 0);
+    pFormatCtx = avformat_alloc_context();
+    pFormatCtx->oformat = pOutputCtx;
+    if (avio_open(&pFormatCtx->pb, picfile, AVIO_FLAG_READ_WRITE) != 0) {
+        // avio_open error
+        return;
+    }
+    pStream = avformat_new_stream(pFormatCtx, 0);
+    if (!pStream) {
+        // avformat_new_stream
+        return;
+    }
+    pCodecCtx = pStream->codec;
+    pCodecCtx->codec_id = pOutputCtx->video_codec;
+    pCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
+    pCodecCtx->width = width;
+    pCodecCtx->height = height;
+    pCodecCtx->time_base.num = 1;
+    pCodecCtx->time_base.den = 25;
+    pCodecCtx->pix_fmt = AV_PIX_FMT_YUVJ420P;
+    pCodec = avcodec_find_encoder(pCodecCtx->codec_id);
+    if (!pCodec) {
+        // avcodec_find_encoder
+        return;
+    }
+    if (avcodec_open2(pCodecCtx, pCodec, 0) != 0) {
+        // avcodec_open2 error
+        return;
+    }
+    pFrame = av_frame_alloc();
+    int size = av_image_get_buffer_size(AV_PIX_FMT_YUVJ420P, width, height, 1);
+    av_image_fill_arrays(
+            pFrame->data, pFrame->linesize,
+            (const uint8_t*)av_malloc(size),
+            AV_PIX_FMT_YUVJ420P, width, height, 1);
+    pFrame->width = width;
+    pFrame->height = height;
+    pFrame->format = AV_PIX_FMT_YUVJ420P;
+
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_init_packet(pPacket);
+    pPacket->stream_index = pStream->index;
+
+    avformat_write_header(pFormatCtx, 0);
+    int ret = avcodec_encode_video2(pCodecCtx, pPacket, pFrame, &got_picture);
+    if (ret < 0) {
+        return;
+    }
+    if (got_picture) {
+        av_write_frame(pFormatCtx, pPacket);
+    }
+    av_write_trailer(pFormatCtx);
+
+    avcodec_close(pCodecCtx);
+    avio_close(pFormatCtx->pb);
+    avformat_free_context(pFormatCtx);
+    free(file_buff);
+    fclose(file_yuv);
+
+    env->ReleaseStringUTFChars(jyuvfile, yuvfile);
+    env->ReleaseStringUTFChars(jpicfile, picfile);
 }

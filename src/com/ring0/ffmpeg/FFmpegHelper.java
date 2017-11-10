@@ -108,4 +108,6 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg_audio_player(String filename);
     // yuv420p 转视频
     public static native void simple_yuv420p_to_video(String yuvfile, String videofile, int width, int height);
+    // yuv420p 保存为图片
+    public static native void simple_yuv420p_to_picture(String yuvfile, String picfile, int width, int height);
 }

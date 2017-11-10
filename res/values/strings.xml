@@ -31,6 +31,7 @@
     <string name="simple_ffmpeg_encoder_name">simple ffmpeg encoder</string>
     <string name="simple_ffmpeg_audio_player_name">simple ffmpeg audio player</string>
     <string name="simple_yuv420p_to_video">simple yuv420p to video</string>
+    <string name="simple_yuv420p_to_picture">simple yuv420p to picture</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -312,6 +313,18 @@
     <string name="simple_yuv420p_to_video_toast_dstfile">请填入目标媒体文件</string>
     <string name="simple_yuv420p_to_video_toast_width">请输入宽</string>
     <string name="simple_yuv420p_to_video_toast_height">请输入高</string>
+    <!-- SimpleYuv420pPictureActivity -->
+    <string name="simple_yuv420p_to_picture_srcfile">yuv420p 文件</string>
+    <string name="simple_yuv420p_to_picture_dstfile">目标图片文件</string>
+    <string name="simple_yuv420p_to_picture_srcfile_hint">这里填入yuv420p 视频序列文件</string>
+    <string name="simple_yuv420p_to_picture_dstfile_hint">这里填入目标图片文件</string>
+    <string name="simple_yuv420p_to_picture_width">宽</string>
+    <string name="simple_yuv420p_to_picture_height">高</string>
+    <string name="simple_yuv420p_to_picture_start">开始</string>
+    <string name="simple_yuv420p_to_picture_toast_srcfile">请填入yuv420p 视频序列文件</string>
+    <string name="simple_yuv420p_to_picture_toast_dstfile">请填入目标图片文件</string>
+    <string name="simple_yuv420p_to_picture_toast_width">请输入宽</string>
+    <string name="simple_yuv420p_to_picture_toast_height">请输入高</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -325,6 +338,7 @@
         <item>simple ffmpeg encoder</item>
         <item>simple ffmpeg audio player</item>
         <item>simple yuv420p to video</item>
+        <item>simple yuv420p to picture</item>
     </string-array>
     
     <string-array name="yuv_list">
