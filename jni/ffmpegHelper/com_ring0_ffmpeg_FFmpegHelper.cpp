@@ -1622,12 +1622,12 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1p
     pFormatCtx = avformat_alloc_context();
     pFormatCtx->oformat = pOutputCtx;
     if (avio_open(&pFormatCtx->pb, picfile, AVIO_FLAG_READ_WRITE) != 0) {
-        // avio_open error
+        __android_log_print(ANDROID_LOG_INFO, "zd-info", "%s", "avio_open error");
         return;
     }
     pStream = avformat_new_stream(pFormatCtx, 0);
     if (!pStream) {
-        // avformat_new_stream
+        __android_log_print(ANDROID_LOG_INFO, "zd-info", "%s", "avformat_new_stream error");
         return;
     }
     pCodecCtx = pStream->codec;
@@ -1640,13 +1640,14 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1p
     pCodecCtx->pix_fmt = AV_PIX_FMT_YUVJ420P;
     pCodec = avcodec_find_encoder(pCodecCtx->codec_id);
     if (!pCodec) {
-        // avcodec_find_encoder
+        __android_log_print(ANDROID_LOG_INFO, "zd-info", "%s", "avcodec_find_encoder error");
         return;
     }
     if (avcodec_open2(pCodecCtx, pCodec, 0) != 0) {
-        // avcodec_open2 error
+        __android_log_print(ANDROID_LOG_INFO, "zd-info", "%s", "avcodec_open2 error");
         return;
     }
+    avformat_write_header(pFormatCtx, 0);
     pFrame = av_frame_alloc();
     int size = av_image_get_buffer_size(AV_PIX_FMT_YUVJ420P, width, height, 1);
     av_image_fill_arrays(
@@ -1656,17 +1657,19 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1p
     pFrame->width = width;
     pFrame->height = height;
     pFrame->format = AV_PIX_FMT_YUVJ420P;
-
+    pFrame->pts = 1;
+    pFrame->data[0] = (uint8_t*)file_buff;
+    pFrame->data[1] = (uint8_t*)file_buff + (width * height);
+    pFrame->data[2] = (uint8_t*)pFrame->data[1] + ((width * height) / 4);
     pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
     av_init_packet(pPacket);
-    pPacket->stream_index = pStream->index;
-
-    avformat_write_header(pFormatCtx, 0);
     int ret = avcodec_encode_video2(pCodecCtx, pPacket, pFrame, &got_picture);
     if (ret < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-info", "%s", "avcodec_encode_video2 error");
         return;
     }
     if (got_picture) {
+        pPacket->stream_index = pStream->index;
         av_write_frame(pFormatCtx, pPacket);
     }
     av_write_trailer(pFormatCtx);
