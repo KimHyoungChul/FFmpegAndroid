@@ -1621,7 +1621,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1p
     pOutputCtx = av_guess_format("mjpeg", 0, 0);
     pFormatCtx = avformat_alloc_context();
     pFormatCtx->oformat = pOutputCtx;
-    if (avio_open(&pFormatCtx->pb, picfile, AVIO_FLAG_READ_WRITE) != 0) {
+    if (avio_open(&pFormatCtx->pb, picfile, AVIO_FLAG_READ_WRITE) < 0) {
         __android_log_print(ANDROID_LOG_INFO, "zd-info", "%s", "avio_open error");
         return;
     }
@@ -1638,6 +1638,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1p
     pCodecCtx->time_base.num = 1;
     pCodecCtx->time_base.den = 25;
     pCodecCtx->pix_fmt = AV_PIX_FMT_YUVJ420P;
+
     pCodec = avcodec_find_encoder(pCodecCtx->codec_id);
     if (!pCodec) {
         __android_log_print(ANDROID_LOG_INFO, "zd-info", "%s", "avcodec_find_encoder error");
@@ -1661,8 +1662,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1p
     pFrame->data[0] = (uint8_t*)file_buff;
     pFrame->data[1] = (uint8_t*)file_buff + (width * height);
     pFrame->data[2] = (uint8_t*)pFrame->data[1] + ((width * height) / 4);
+
     pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
-    av_init_packet(pPacket);
+    av_new_packet(pPacket, width * height * 3);
     int ret = avcodec_encode_video2(pCodecCtx, pPacket, pFrame, &got_picture);
     if (ret < 0) {
         __android_log_print(ANDROID_LOG_INFO, "zd-info", "%s", "avcodec_encode_video2 error");
@@ -1677,6 +1679,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1p
     avcodec_close(pCodecCtx);
     avio_close(pFormatCtx->pb);
     avformat_free_context(pFormatCtx);
+    av_packet_unref(pPacket);
     free(file_buff);
     fclose(file_yuv);
 
