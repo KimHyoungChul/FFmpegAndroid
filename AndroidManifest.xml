@@ -170,12 +170,17 @@
         <!-- SimpleYuv420pToVideo -->
         <activity
             android:name="com.ring0.ffmpegandroid.SimpleYuv420pToVideo"
-            android:label="@string/simple_yuv420p_to_video" >
+            android:label="@string/simple_yuv420p_to_video_name" >
         </activity>
         <!-- SimpleYuv420pPictureActivity -->
         <activity
             android:name="com.ring0.ffmpegandroid.SimpleYuv420pPictureActivity"
-            android:label="@string/simple_yuv420p_to_picture" >
+            android:label="@string/simple_yuv420p_to_picture_name" >
+        </activity>
+        <!-- SimplePcmToAACActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimplePcmToAACActivity"
+            android:label="@string/simple_pcm_to_aac_name" >
         </activity>
     </application>
 

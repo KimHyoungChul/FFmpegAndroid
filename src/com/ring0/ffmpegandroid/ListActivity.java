@@ -149,6 +149,10 @@ public class ListActivity extends Activity implements View.OnClickListener {
             intent = new Intent(this, SimpleYuv420pPictureActivity.class);
             startActivity(intent);
             break;
+        case 12: // simple pcm to aac
+            intent = new Intent(this, SimplePcmToAACActivity.class);
+            startActivity(intent);
+            break;
         }
     }
 }

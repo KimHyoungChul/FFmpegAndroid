@@ -1686,3 +1686,105 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1p
     env->ReleaseStringUTFChars(jyuvfile, yuvfile);
     env->ReleaseStringUTFChars(jpicfile, picfile);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm_1to_1aac
+  (JNIEnv *env, jclass, jstring jpcmfile, jstring jaacfile, jint sample_rate, jint channel) {
+    char *pcmfile = (char*)env->GetStringUTFChars(jpcmfile, 0);
+    char *aacfile = (char*)env->GetStringUTFChars(jaacfile, 0);
+
+    FILE *file_pcm  = 0;
+    char *file_buff = 0;
+
+    AVFormatContext *pFormatCtx  = 0;
+    AVOutputFormat  *pOutputCtx  = 0;
+    AVCodecContext  *pCodecCtx   = 0;
+    AVCodec         *pCodec      = 0;
+    AVStream        *pStream     = 0;
+    AVPacket        *pPacket     = 0;
+    AVFrame         *pFrame      = 0;
+    int              frame_cnt   = 0;
+    int              got_picture = 0;
+
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    pOutputCtx = av_guess_format("aac", aacfile, 0);
+    pFormatCtx = avformat_alloc_context();
+    pFormatCtx->oformat = pOutputCtx;
+    if (avio_open(&pFormatCtx->pb, aacfile, AVIO_FLAG_READ_WRITE) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avio_open error");
+        return;
+    }
+    pStream = avformat_new_stream(pFormatCtx, 0);
+    pCodecCtx = pStream->codec;
+    pCodecCtx->codec_id   = pOutputCtx->audio_codec;
+    pCodecCtx->codec_type = AVMEDIA_TYPE_AUDIO;
+    pCodecCtx->sample_rate = sample_rate;
+    pCodecCtx->sample_fmt = AV_SAMPLE_FMT_FLTP;
+    pCodecCtx->channel_layout = AV_CH_LAYOUT_MONO;
+    pCodecCtx->channels = channel;
+    pCodecCtx->bit_rate = 64000;
+    pCodec = avcodec_find_encoder(pCodecCtx->codec_id);
+    if (!pCodec) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_find_encoder error");
+        return;
+    }
+    if (avcodec_open2(pCodecCtx, pCodec, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_open2 error");
+        return;
+    }
+    // 创建 AVFrame
+    pFrame = av_frame_alloc();
+    int size = av_samples_get_buffer_size(pFrame->linesize, channel, sample_rate, AV_SAMPLE_FMT_FLTP, 1);
+    av_samples_fill_arrays(
+            pFrame->data, pFrame->linesize,
+            (const uint8_t*)av_malloc(size),
+            channel, sample_rate, AV_SAMPLE_FMT_FLTP, 1);
+    // 创建 AVPacket
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_new_packet(pPacket, size);
+    // 打开文件
+    file_pcm = fopen(pcmfile, "rb+");
+    file_buff = (char*)malloc(size);
+    // 写入文件头
+    avformat_write_header(pFormatCtx, 0);
+    while (!feof(file_pcm)) {
+        fread(file_buff, 1, size, file_pcm);
+        pFrame->data[0] = (uint8_t*)file_buff;
+        pFrame->pts = frame_cnt++;
+
+        int ret = avcodec_encode_audio2(pCodecCtx, pPacket, pFrame, &got_picture);
+        if (ret < 0) {
+            break;
+        }
+        if (got_picture) {
+            pPacket->stream_index = pStream->index;
+            av_write_frame(pFormatCtx, pPacket);
+        }
+        av_free_packet(pPacket);
+    }
+    /*
+    while (1) {
+        pPacket->data = 0;
+        pPacket->size = 0;
+        av_init_packet(pPacket);
+        int ret = avcodec_encode_audio2(pCodecCtx, pPacket, pFrame, &got_picture);
+        if (ret < 0) {
+            break;
+        }
+        if (got_picture) {
+            pPacket->stream_index = pStream->index;
+            av_write_frame(pFormatCtx, pPacket);
+        }
+        av_free_packet(pPacket);
+    }*/
+    av_write_trailer(pFormatCtx);
+    avcodec_close(pCodecCtx);
+    avio_close(pFormatCtx->pb);
+    avformat_free_context(pFormatCtx);
+    fclose(file_pcm);
+    free(file_buff);
+
+    env->ReleaseStringUTFChars(jpcmfile, pcmfile);
+    env->ReleaseStringUTFChars(jaacfile, aacfile);
+}

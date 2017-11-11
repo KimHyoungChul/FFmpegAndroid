@@ -110,4 +110,6 @@ public class FFmpegHelper {
     public static native void simple_yuv420p_to_video(String yuvfile, String videofile, int width, int height);
     // yuv420p 保存为图片
     public static native void simple_yuv420p_to_picture(String yuvfile, String picfile, int width, int height);
+    // pcm 转 aac
+    public static native void simple_pcm_to_aac(String pcmfile, String aacfile, int sample_rate, int channel);
 }
