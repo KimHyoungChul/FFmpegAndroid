@@ -68,36 +68,36 @@ bool phase_conf(phase_conf_t* conf) {
     return ret;
 }
 
-void phase_process(float **in, float **out, int sample_rate) {
-    float *ibuf = in[0];
-    float *obuf = out[0];
+void phase_process(float **inblock, float **outblock, int sample_rate) {
+    float *ibuf = inblock[0];
+    float *obuf = outblock[0];
 
     for (int j = phase->last_stages; j < phase->conf->stages; j++) {
-       phase->old[j] = 0;
+        phase->old[j] = 0;
     }
     phase->last_stages = phase->conf->stages;
     phase->lfoskip     = phase->conf->freq * 2 * M_PI / phase->sample_rate;
     phase->phase       = phase->conf->phase * M_PI / 180;
     phase->outgain     = DB_TO_LINEAR(phase->conf->gain);
     for (int i = 0; i < sample_rate; i++) {
-       double in = ibuf[i];
-       // Feedback must be less than 100% to avoid infinite gain.
-       double m = in + phase->fbout * phase->conf->feedback / 101;
-       if (((phase->skip_count++) % lfoskipsamples) == 0) {
-          //compute sine between 0 and 1
-           phase->gain = (1.0 + cos(phase->skip_count * phase->lfoskip + phase->phase)) / 2.0;
-          // change lfo shape
-           phase->gain = expm1(phase->gain * phaserlfoshape) / expm1(phaserlfoshape);
-          // attenuate the lfo
-           phase->gain = 1.0 - phase->gain / 255.0 * phase->conf->depth;
-       }
-       // phasing routine
-       for (int j = 0; j < phase->conf->stages; j++) {
-          double tmp = phase->old[j];
-          phase->old[j] = phase->gain * tmp + m;
-          m = tmp - phase->gain * phase->old[j];
-       }
-       phase->fbout = m;
-       obuf[i] = (float) (phase->outgain * (m * phase->conf->dry_wet + in * (255 - phase->conf->dry_wet)) / 255);
+        double in = ibuf[i];
+        // Feedback must be less than 100% to avoid infinite gain.
+        double m = in + phase->fbout * phase->conf->feedback / 101;
+        if (((phase->skip_count++) % lfoskipsamples) == 0) {
+            //compute sine between 0 and 1
+            phase->gain = (1.0 + cos(phase->skip_count * phase->lfoskip + phase->phase)) / 2.0;
+            // change lfo shape
+            phase->gain = expm1(phase->gain * phaserlfoshape) / expm1(phaserlfoshape);
+            // attenuate the lfo
+            phase->gain = 1.0 - phase->gain / 255.0 * phase->conf->depth;
+        }
+        // phasing routine
+        for (int j = 0; j < phase->conf->stages; j++) {
+            double tmp = phase->old[j];
+            phase->old[j] = phase->gain * tmp + m;
+            m = tmp - phase->gain * phase->old[j];
+        }
+        phase->fbout = m;
+        obuf[i] = (float) (phase->outgain * (m * phase->conf->dry_wet + in * (255 - phase->conf->dry_wet)) / 255);
     }
 }

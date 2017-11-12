@@ -5,7 +5,8 @@ LOCAL_PATH := $(call my-dir)
 ###############################################################################
 include $(CLEAR_VARS)
 LOCAL_MODULE            :=  effect
-LOCAL_SRC_FILES         :=  effect/phase.cpp
+LOCAL_SRC_FILES         :=  effect/phase.cpp \
+                            effect/wahwah.cpp
 LOCAL_C_INCLUDES        :=  $(LOCAL_PATH)/effect
 LOCAL_ARM_MODE          :=  arm
 LOCAL_CFLAGS            +=  -fvisibility=hidden
