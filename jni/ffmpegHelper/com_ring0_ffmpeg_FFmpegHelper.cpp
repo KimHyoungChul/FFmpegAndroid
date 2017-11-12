@@ -1796,7 +1796,6 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h
 
     FILE *file_yuv  = 0;
     char *file_buff = 0;
-
     AVFormatContext *pFormatCtx  = 0;
     AVOutputFormat  *pOutputCtx  = 0;
     AVCodecContext  *pCodecCtx   = 0;
@@ -1805,11 +1804,11 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h
     AVPacket        *pPacket     = 0;
     AVFrame         *pFrame      = 0;
     int              got_picture = 0;
+    int              frame_cnt   = 0;
     av_log_set_callback(ff_log_callback);
     av_register_all();
     avcodec_register_all();
-
-    pOutputCtx = av_guess_format("libx264", 0, 0);
+    pOutputCtx = av_guess_format("h264", 0, 0);
     pFormatCtx = avformat_alloc_context();
     pFormatCtx->oformat = pOutputCtx;
     if (avio_open(&pFormatCtx->pb, h264file, AVIO_FLAG_READ_WRITE) < 0) {
@@ -1825,9 +1824,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h
     pCodecCtx->height = height;
     pCodecCtx->time_base.num = 1;
     pCodecCtx->time_base.den = 25;
-    pCodecCtx->gop_size = 120;
-    pCodecCtx->max_b_frames = 12;
-
+    pCodecCtx->gop_size = 10;
+    pCodecCtx->max_b_frames = 2;
+    pCodecCtx->bit_rate = 400000;
     // params
     pCodecCtx->me_range = 16;
     pCodecCtx->max_qdiff = 4;
@@ -1867,17 +1866,17 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h
     file_yuv  = fopen(yuvfile, "rb+");
     file_buff = (char*)malloc(size);
     while (!feof(file_yuv)) {
-        int ret = fread(file_buff, 1, width * height * 3 / 2, file_yuv);
+        int ret = fread(file_buff, 1, (width * height * 3) / 2, file_yuv);
         if (ret < 0) {
             break;
         }
         pFrame->width   = width;
         pFrame->height  = height;
         pFrame->format  = AV_PIX_FMT_YUV420P;
+        pFrame->pts     = frame_cnt++ * ((pStream->time_base.den) / (pStream->time_base.num * 25));
         pFrame->data[0] = (uint8_t*)file_buff;
         pFrame->data[1] = (uint8_t*)(pFrame->data[0] + (width * height));
         pFrame->data[2] = (uint8_t*)(pFrame->data[1] + (width * height / 4));
-
         ret = avcodec_encode_video2(pCodecCtx, pPacket, pFrame, &got_picture);
         if (ret < 0) {
             break;
@@ -1889,9 +1888,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h
         }
     }
     av_write_trailer(pFormatCtx);
-    avcodec_close(pCodecCtx);
-    avio_close(pFormatCtx->pb);
-    avformat_free_context(pFormatCtx);
+    //avcodec_close(pCodecCtx);
+    //avio_close(pFormatCtx->pb);
+    //avformat_free_context(pFormatCtx);
 
     fclose(file_yuv);
     free(file_buff);
@@ -1972,7 +1971,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h
     pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
     av_new_packet(pPacket, size);
     // 准备数据
-    file_yuv = fopen(h265file, "rb+");
+    file_yuv = fopen(yuvfile, "rb+");
     file_buff = (char*)malloc(size);
     while (!feof(file_yuv)) {
         int ret = fread(file_buff, 1, size, file_yuv);
