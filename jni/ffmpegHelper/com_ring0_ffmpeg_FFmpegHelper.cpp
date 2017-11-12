@@ -1788,3 +1788,222 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm_1to_1aac
     env->ReleaseStringUTFChars(jpcmfile, pcmfile);
     env->ReleaseStringUTFChars(jaacfile, aacfile);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h264
+  (JNIEnv *env, jclass, jstring jyuvfile, jstring jh264file, jint width, jint height) {
+    char *yuvfile = (char*)env->GetStringUTFChars(jyuvfile, 0);
+    char *h264file = (char*)env->GetStringUTFChars(jh264file, 0);
+
+    FILE *file_yuv  = 0;
+    char *file_buff = 0;
+
+    AVFormatContext *pFormatCtx  = 0;
+    AVOutputFormat  *pOutputCtx  = 0;
+    AVCodecContext  *pCodecCtx   = 0;
+    AVStream        *pStream     = 0;
+    AVCodec         *pCodec      = 0;
+    AVPacket        *pPacket     = 0;
+    AVFrame         *pFrame      = 0;
+    int              got_picture = 0;
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+
+    pOutputCtx = av_guess_format("libx264", 0, 0);
+    pFormatCtx = avformat_alloc_context();
+    pFormatCtx->oformat = pOutputCtx;
+    if (avio_open(&pFormatCtx->pb, h264file, AVIO_FLAG_READ_WRITE) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avio_open error");
+        return;
+    }
+    pStream = avformat_new_stream(pFormatCtx, 0);
+    pCodecCtx = pStream->codec;
+    pCodecCtx->codec_id = pOutputCtx->video_codec;
+    pCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
+    pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+    pCodecCtx->width = width;
+    pCodecCtx->height = height;
+    pCodecCtx->time_base.num = 1;
+    pCodecCtx->time_base.den = 25;
+    pCodecCtx->gop_size = 120;
+    pCodecCtx->max_b_frames = 12;
+
+    // params
+    pCodecCtx->me_range = 16;
+    pCodecCtx->max_qdiff = 4;
+    pCodecCtx->qmin = 20;
+    pCodecCtx->qmax = 51;
+    pCodecCtx->qcompress = 0.6;
+    if (pCodecCtx->codec_id == AV_CODEC_ID_H264) {
+        av_opt_set(pCodecCtx->priv_data, "preset",      "slow",         0);
+        av_opt_set(pCodecCtx->priv_data, "tune",        "zerolatency",  0);
+        av_opt_set(pCodecCtx->priv_data, "profile",     "main",         0);
+    }
+    if (pCodecCtx->codec_id == AV_CODEC_ID_H265) {
+        av_opt_set(pCodecCtx->priv_data, "x264-params", "qp=20",        0);
+        av_opt_set(pCodecCtx->priv_data, "preset",      "ultrafast",    0);
+        av_opt_set(pCodecCtx->priv_data, "tune",        "zero-latency", 0);
+    }
+    pCodec = avcodec_find_encoder(pCodecCtx->codec_id);
+    if (!pCodec) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_find_encoder error");
+        return;
+    }
+    if (avcodec_open2(pCodecCtx, pCodec, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_open2 error");
+        return;
+    }
+    avformat_write_header(pFormatCtx, 0);
+    // 创建 AVFrame
+    pFrame = av_frame_alloc();
+    int size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, width, height, 1);
+    av_image_fill_arrays(
+            pFrame->data, pFrame->linesize, (const uint8_t*)av_malloc(size),
+            AV_PIX_FMT_YUV420P, width, height, 1);
+    // 创建 AVPacket
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_new_packet(pPacket, size);
+    // 准备数据
+    file_yuv  = fopen(yuvfile, "rb+");
+    file_buff = (char*)malloc(size);
+    while (!feof(file_yuv)) {
+        int ret = fread(file_buff, 1, width * height * 3 / 2, file_yuv);
+        if (ret < 0) {
+            break;
+        }
+        pFrame->width   = width;
+        pFrame->height  = height;
+        pFrame->format  = AV_PIX_FMT_YUV420P;
+        pFrame->data[0] = (uint8_t*)file_buff;
+        pFrame->data[1] = (uint8_t*)(pFrame->data[0] + (width * height));
+        pFrame->data[2] = (uint8_t*)(pFrame->data[1] + (width * height / 4));
+
+        ret = avcodec_encode_video2(pCodecCtx, pPacket, pFrame, &got_picture);
+        if (ret < 0) {
+            break;
+        }
+        if (got_picture) {
+            pPacket->stream_index = pStream->index;
+            av_write_frame(pFormatCtx, pPacket);
+            av_free_packet(pPacket);
+        }
+    }
+    av_write_trailer(pFormatCtx);
+    avcodec_close(pCodecCtx);
+    avio_close(pFormatCtx->pb);
+    avformat_free_context(pFormatCtx);
+
+    fclose(file_yuv);
+    free(file_buff);
+    env->ReleaseStringUTFChars(jyuvfile, yuvfile);
+    env->ReleaseStringUTFChars(jh264file, h264file);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h265
+  (JNIEnv *env, jclass, jstring jyuvfile, jstring jh265file, jint width, jint height) {
+    char *yuvfile = (char*)env->GetStringUTFChars(jyuvfile, 0);
+    char *h265file = (char*)env->GetStringUTFChars(jh265file, 0);
+
+    FILE *file_yuv  = 0;
+    char *file_buff = 0;
+
+    AVFormatContext *pFormatCtx  = 0;
+    AVOutputFormat  *pOutputCtx  = 0;
+    AVCodecContext  *pCodecCtx   = 0;
+    AVStream        *pStream     = 0;
+    AVCodec         *pCodec      = 0;
+    AVPacket        *pPacket     = 0;
+    AVFrame         *pFrame      = 0;
+    int              got_picture = 0;
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    pOutputCtx = av_guess_format("libx265", 0, 0);
+    pFormatCtx = avformat_alloc_context();
+    pFormatCtx->oformat = pOutputCtx;
+    if (avio_open(&pFormatCtx->pb, h265file, AVIO_FLAG_READ_WRITE) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avio_open error");
+        return;
+    }
+    pStream = avformat_new_stream(pFormatCtx, 0);
+    pCodecCtx = pStream->codec;
+    pCodecCtx->codec_id      = pOutputCtx->video_codec;
+    pCodecCtx->codec_type    = AVMEDIA_TYPE_VIDEO;
+    pCodecCtx->pix_fmt       = AV_PIX_FMT_YUV420P;
+    pCodecCtx->width         = width;
+    pCodecCtx->height        = height;
+    pCodecCtx->time_base.num = 1;
+    pCodecCtx->time_base.den = 25;
+    pCodecCtx->gop_size      = 120;
+    pCodecCtx->max_b_frames  = 12;
+    // params
+    pCodecCtx->me_range  = 16;
+    pCodecCtx->max_qdiff = 4;
+    pCodecCtx->qmin      = 20;
+    pCodecCtx->qmax      = 51;
+    pCodecCtx->qcompress = 0.6;
+    if (pCodecCtx->codec_id == AV_CODEC_ID_H264) {
+        av_opt_set(pCodecCtx->priv_data, "preset",      "slow",         0);
+        av_opt_set(pCodecCtx->priv_data, "tune",        "zerolatency",  0);
+        av_opt_set(pCodecCtx->priv_data, "profile",     "main",         0);
+    }
+    if (pCodecCtx->codec_id == AV_CODEC_ID_H265) {
+        av_opt_set(pCodecCtx->priv_data, "x264-params", "qp=20",        0);
+        av_opt_set(pCodecCtx->priv_data, "preset",      "ultrafast",    0);
+        av_opt_set(pCodecCtx->priv_data, "tune",        "zero-latency", 0);
+    }
+    pCodec = avcodec_find_encoder(pCodecCtx->codec_id);
+    if (!pCodec) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_find_encode error");
+        return;
+    }
+    if (avcodec_open2(pCodecCtx, pCodec, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_open2 error");
+        return;
+    }
+    avformat_write_header(pFormatCtx, 0);
+    // 创建 AVFrame
+    pFrame = av_frame_alloc();
+    int size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, width, height, 1);
+    av_image_fill_arrays(
+            pFrame->data, pFrame->linesize, (const uint8_t*)av_malloc(size),
+            AV_PIX_FMT_YUV420P, width, height, 1);
+    // 创建 AVPacket
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_new_packet(pPacket, size);
+    // 准备数据
+    file_yuv = fopen(h265file, "rb+");
+    file_buff = (char*)malloc(size);
+    while (!feof(file_yuv)) {
+        int ret = fread(file_buff, 1, size, file_yuv);
+        if (ret < 0) {
+            break;
+        }
+        pFrame->width = width;
+        pFrame->height = height;
+        pFrame->format = AV_PIX_FMT_YUV420P;
+        pFrame->data[0] = (uint8_t*)file_buff;
+        pFrame->data[1] = (uint8_t*)(pFrame->data[0] + (width * height));
+        pFrame->data[2] = (uint8_t*)(pFrame->data[1] + (width * height / 4));
+
+        ret = avcodec_encode_video2(pCodecCtx, pPacket, pFrame, &got_picture);
+        if (ret < 0) {
+            break;
+        }
+        if (got_picture) {
+            pPacket->stream_index = pStream->index;
+            av_write_frame(pFormatCtx, pPacket);
+            av_free_packet(pPacket);
+        }
+    }
+    av_write_trailer(pFormatCtx);
+    avcodec_close(pCodecCtx);
+    avio_close(pFormatCtx->pb);
+    avformat_free_context(pFormatCtx);
+
+    fclose(file_yuv);
+    free(file_buff);
+
+    env->ReleaseStringUTFChars(jyuvfile, yuvfile);
+    env->ReleaseStringUTFChars(jh265file, h265file);
+}

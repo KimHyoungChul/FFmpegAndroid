@@ -92,6 +92,12 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1p
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1pcm_1to_1aac
   (JNIEnv *, jclass, jstring, jstring, jint, jint);
 
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h264
+  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h265
+  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+
 #ifdef __cplusplus
 }
 #endif

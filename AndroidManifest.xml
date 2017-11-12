@@ -182,6 +182,16 @@
             android:name="com.ring0.ffmpegandroid.SimplePcmToAACActivity"
             android:label="@string/simple_pcm_to_aac_name" >
         </activity>
+        <!-- SimpleYuv420pToH264Activity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv420pToH264Activity"
+            android:label="@string/simple_yuv420p_to_h264_name" >
+        </activity>
+        <!-- SimpleYuv420pToH265Activity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv420pToH265Activity"
+            android:label="@string/simple_yuv420p_to_h264_name" >
+        </activity>
     </application>
 
 </manifest>

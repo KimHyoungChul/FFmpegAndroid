@@ -33,6 +33,8 @@
     <string name="simple_yuv420p_to_video_name">simple yuv420p to video</string>
     <string name="simple_yuv420p_to_picture_name">simple yuv420p to picture</string>
     <string name="simple_pcm_to_aac_name">simple pcm to aac</string>
+    <string name="simple_yuv420p_to_h264_name">simple yuv420p to h264</string>
+    <string name="simple_yuv420p_to_h265_name">simple yuv420p to h265</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -338,7 +340,30 @@
     <string name="simple_pcm_to_aac_toast_dstfile">请填入填入aac 文件</string>
     <string name="simple_pcm_to_aac_toast_sample_rate">请输入采样率</string>
     <string name="simple_pcm_to_aac_toast_channel">请输入通道</string>
-    
+    <!-- SimpleYuv420pToH264Activity -->
+    <string name="simple_yuv420p_to_h264_srcfile">yuv420p 文件</string>
+    <string name="simple_yuv420p_to_h264_dstfile">目标 h264 文件</string>
+    <string name="simple_yuv420p_to_h264_srcfile_hint">这里填入yuv420p 视频序列文件</string>
+    <string name="simple_yuv420p_to_h264_dstfile_hint">这里填入目标h264文件</string>
+    <string name="simple_yuv420p_to_h264_width">宽</string>
+    <string name="simple_yuv420p_to_h264_height">高</string>
+    <string name="simple_yuv420p_to_h264_start">开始</string>
+    <string name="simple_yuv420p_to_h264_toast_srcfile">请填入yuv420p 视频序列文件</string>
+    <string name="simple_yuv420p_to_h264_toast_dstfile">请填入目标h264文件</string>
+    <string name="simple_yuv420p_to_h264_toast_width">请输入宽</string>
+    <string name="simple_yuv420p_to_h264_toast_height">请输入高</string>
+    <!-- SimpleYuv420pToH265Activity -->
+    <string name="simple_yuv420p_to_h265_srcfile">yuv420p 文件</string>
+    <string name="simple_yuv420p_to_h265_dstfile">目标 h265 文件</string>
+    <string name="simple_yuv420p_to_h265_srcfile_hint">这里填入yuv420p 视频序列文件</string>
+    <string name="simple_yuv420p_to_h265_dstfile_hint">这里填入目标h265文件</string>
+    <string name="simple_yuv420p_to_h265_width">宽</string>
+    <string name="simple_yuv420p_to_h265_height">高</string>
+    <string name="simple_yuv420p_to_h265_start">开始</string>
+    <string name="simple_yuv420p_to_h265_toast_srcfile">请填入yuv420p 视频序列文件</string>
+    <string name="simple_yuv420p_to_h265_toast_dstfile">请填入目标h265文件</string>
+    <string name="simple_yuv420p_to_h265_toast_width">请输入宽</string>
+    <string name="simple_yuv420p_to_h265_toast_height">请输入高</string>
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
         <item>ffmpeg 解码为 pcm</item>
@@ -353,6 +378,8 @@
         <item>simple yuv420p to video</item>
         <item>simple yuv420p to picture</item>
         <item>simple pcm to aac</item>
+        <item>simple yuv420p to h264</item>
+        <item>simple yuv420p to h265</item>
     </string-array>
     
     <string-array name="yuv_list">
