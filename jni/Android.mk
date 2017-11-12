@@ -1,6 +1,18 @@
 LOCAL_PATH := $(call my-dir)
 ###############################################################################
-#       audioHelper
+#       effect
+#       author:zd
+###############################################################################
+include $(CLEAR_VARS)
+LOCAL_MODULE            :=  effect
+LOCAL_SRC_FILES         :=  effect/phase.cpp
+LOCAL_C_INCLUDES        :=  $(LOCAL_PATH)/effect
+LOCAL_ARM_MODE          :=  arm
+LOCAL_CFLAGS            +=  -fvisibility=hidden
+LOCAL_LDLIBS            :=  -llog -lm -lz
+include $(BUILD_SHARED_LIBRARY)
+###############################################################################
+#       ffmpegHelper
 #       author:zd
 ###############################################################################
 include $(CLEAR_VARS)
