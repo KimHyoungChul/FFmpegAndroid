@@ -116,4 +116,6 @@ public class FFmpegHelper {
     public static native void simple_yuv420p_to_h264(String yuvfile, String h264file, int width, int height);
     // yuv420p 转 h265
     public static native void simple_yuv420p_to_h265(String yuvfile, String h265file, int width, int height);
+    // 无编解码的转换封装格式
+    public static native void simple_video_audio_remuxer(String srcfile, String dstfile);
 }

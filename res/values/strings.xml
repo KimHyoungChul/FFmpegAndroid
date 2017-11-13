@@ -35,6 +35,7 @@
     <string name="simple_pcm_to_aac_name">simple pcm to aac</string>
     <string name="simple_yuv420p_to_h264_name">simple yuv420p to h264</string>
     <string name="simple_yuv420p_to_h265_name">simple yuv420p to h265</string>
+    <string name="simple_video_audio_remuxer_name">simple video audio remuxer</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -364,6 +365,15 @@
     <string name="simple_yuv420p_to_h265_toast_dstfile">请填入目标h265文件</string>
     <string name="simple_yuv420p_to_h265_toast_width">请输入宽</string>
     <string name="simple_yuv420p_to_h265_toast_height">请输入高</string>
+    <!-- SimpleVideoAudioRemuxerActivity -->
+    <string name="simple_video_audio_remuxer_srcfile">源文件</string>
+    <string name="simple_video_audio_remuxer_dstfile">目标文件</string>
+    <string name="simple_video_audio_remuxer_srcfile_hint">这里填入要转换的源文件</string>
+    <string name="simple_video_audio_remuxer_dstfile_hint">这里填入要转换的目标文件</string>
+    <string name="simple_video_audio_remuxer_start">开始</string>
+    <string name="simple_video_audio_remuxer_toast_srcfile">请输入要转换的源文件</string>
+    <string name="simple_video_audio_remuxer_toast_dstfile">请输入要转换的目标文件</string>
+    
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
         <item>ffmpeg 解码为 pcm</item>
@@ -380,6 +390,7 @@
         <item>simple pcm to aac</item>
         <item>simple yuv420p to h264</item>
         <item>simple yuv420p to h265</item>
+        <item>simple video audio remuxer</item>
     </string-array>
     
     <string-array name="yuv_list">

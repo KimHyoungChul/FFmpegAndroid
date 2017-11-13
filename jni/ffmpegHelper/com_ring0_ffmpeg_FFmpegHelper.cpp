@@ -2006,3 +2006,88 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1h
     env->ReleaseStringUTFChars(jyuvfile, yuvfile);
     env->ReleaseStringUTFChars(jh265file, h265file);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1video_1audio_1remuxer
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    AVFormatContext *pInputCtx  = 0;
+    AVFormatContext *pOutputCtx = 0;
+    AVOutputFormat  *pOutFmtCtx = 0;
+    AVStream        *pInStream  = 0;
+    AVStream        *pOutStream = 0;
+    AVPacket        *pPacket    = 0;
+
+    //av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    pInputCtx = avformat_alloc_context();
+    pOutputCtx = avformat_alloc_context();
+    pOutFmtCtx = av_guess_format(0, dstfile, 0);
+    pOutputCtx->oformat = pOutFmtCtx;
+    if (avio_open(&pOutputCtx->pb, dstfile, AVIO_FLAG_READ_WRITE) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avio_open error");
+        return;
+    }
+    if (avformat_open_input(&pInputCtx, srcfile, 0, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pInputCtx, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
+        return;
+    }
+    for (int i = 0; i < pInputCtx->nb_streams; i++) {
+        pInStream = pInputCtx->streams[i];
+        pOutStream = avformat_new_stream(pOutputCtx, pInStream->codec->codec);
+        if (!pOutStream) {
+            __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_new_stream error");
+            return;
+        }
+        int ret = avcodec_copy_context(pOutStream->codec, pInStream->codec);
+        if (ret != 0) {
+            __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_copy_context error");
+            return;
+        }
+        pOutStream->codec->codec_tag = 0;
+        if (!(pOutputCtx->oformat->flags & AVFMT_GLOBALHEADER)) {
+             pOutStream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+        }
+    }
+    avformat_write_header(pOutputCtx, 0);
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_init_packet(pPacket);
+    while (1) {
+        AVStream *inStream  = 0;
+        AVStream *outStream = 0;
+        int ret = av_read_frame(pInputCtx, pPacket);
+        if (ret < 0) {
+            break;
+        }
+        inStream  = pInputCtx->streams[pPacket->stream_index];
+        outStream = pOutputCtx->streams[pPacket->stream_index];
+        pPacket->dts = av_rescale_q_rnd(
+                pPacket->dts,
+                inStream->time_base, outStream->time_base,
+                (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+        pPacket->pts = av_rescale_q_rnd(
+                pPacket->pts,
+                inStream->time_base, outStream->time_base,
+                (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+        pPacket->duration = av_rescale_q_rnd(
+                pPacket->duration,
+                inStream->time_base, outStream->time_base,
+                (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+        pPacket->pos = -1;
+        av_interleaved_write_frame(pOutputCtx, pPacket);
+        av_free_packet(pPacket);
+    }
+    av_write_trailer(pOutputCtx);
+    avio_close(pOutputCtx->pb);
+    avformat_free_context(pOutputCtx);
+    avformat_close_input(&pInputCtx);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}
