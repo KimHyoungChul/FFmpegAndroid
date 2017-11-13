@@ -1,4 +1,5 @@
 #include "phase.h"
+// "不均匀相移器" 音效增强器
 
 #define phaserlfoshape 4.0
 #define lfoskipsamples 20

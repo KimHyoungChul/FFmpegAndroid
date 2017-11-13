@@ -1,4 +1,5 @@
 #include "wahwah.h"
+// "左右回绕" 音效增强器
 
 #define DB_TO_LINEAR(x) (pow(10.0, (x) / 20.0))
 #define lfoskipsamples 30
@@ -88,8 +89,7 @@ void wahwah_process(float **inblock, float **outblock, int sample_rate) {
         in = (double) ibuf[i];
 
         if ((wahwah->skip_count++) % lfoskipsamples == 0) {
-            frequency = (1 + cos(wahwah->skip_count * wahwah->lfoskip + wahwah->phase))
-                    / 2;
+            frequency = (1 + cos(wahwah->skip_count * wahwah->lfoskip + wahwah->phase)) / 2;
             frequency = frequency * wahwah->depth * (1 - wahwah->freqofs) + wahwah->freqofs;
             frequency = exp((frequency - 1) * 6);
             omega = M_PI * frequency;
@@ -97,11 +97,11 @@ void wahwah_process(float **inblock, float **outblock, int sample_rate) {
             cs = cos(omega);
             alpha = sn / (2 * wahwah->conf->res);
             wahwah->b0 = (1 - cs) / 2;
-            wahwah->b1 = 1 - cs;
+            wahwah->b1 =  1 - cs;
             wahwah->b2 = (1 - cs) / 2;
-            wahwah->a0 = 1 + alpha;
+            wahwah->a0 =  1 + alpha;
             wahwah->a1 = -2 * cs;
-            wahwah->a2 = 1 - alpha;
+            wahwah->a2 =  1 - alpha;
         };
         out = (wahwah->b0 * in + wahwah->b1 * wahwah->xn1 + wahwah->b2 * wahwah->xn2 - wahwah->a1 * wahwah->yn1 - wahwah->a2 * wahwah->yn2) / wahwah->a0;
         wahwah->xn2 = wahwah->xn1;
