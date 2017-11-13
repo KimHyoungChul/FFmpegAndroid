@@ -32,7 +32,7 @@ bool crystailzer_conf(crystailzer_conf_t *conf) {
 void crystailzer_process(float** inblock, float** outblock, int sample_rate) {
     float value = crystailzer->conf->intensity;
     float *f    = inblock[0];
-    float *end  = f + sample_rate;
+    float *end  = inblock[0] + sample_rate;
     float *out  = outblock[0];
     while (f < end) {
         for (int channel = 0; channel < crystailzer->channels; channel++) {
