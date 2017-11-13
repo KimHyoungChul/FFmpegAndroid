@@ -1,4 +1,5 @@
 #include "stereo.h"
+// "立体声均匀器" 音效增强器
 
 static stereo_t *stereo = 0;
 
