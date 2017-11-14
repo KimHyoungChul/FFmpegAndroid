@@ -42,4 +42,6 @@ void crystailzer_process(float** inblock, float** outblock, int sample_rate) {
             f++;
         }
     }
+    // flush
+    memset((void*)crystailzer->cryst, 0, sizeof(float) * crystailzer->channels);
 }
