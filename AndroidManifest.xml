@@ -197,6 +197,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleVideoAudioRemuxerActivity"
             android:label="@string/simple_video_audio_remuxer_name" >
         </activity>
+        <!-- SimpleYuv420pFilterActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv420pFilterActivity"
+            android:label="@string/simple_yuv420p_filter_name" >
+        </activity>
     </application>
 
 </manifest>

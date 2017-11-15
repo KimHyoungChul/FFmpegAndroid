@@ -165,6 +165,10 @@ public class ListActivity extends Activity implements View.OnClickListener {
             intent = new Intent(this, SimpleVideoAudioRemuxerActivity.class);
             startActivity(intent);
             break;
+        case 16: // simple yuv420p filter
+            intent = new Intent(this, SimpleYuv420pFilterActivity.class);
+            startActivity(intent);
+            break;
         }
     }
 }

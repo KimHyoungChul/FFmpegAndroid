@@ -118,4 +118,6 @@ public class FFmpegHelper {
     public static native void simple_yuv420p_to_h265(String yuvfile, String h265file, int width, int height);
     // 无编解码的转换封装格式
     public static native void simple_video_audio_remuxer(String srcfile, String dstfile);
+    // 精简的水印叠加器
+    public static native void simple_yuv420p_to_filter(String srcfile, String filterfile, int frame);
 }
