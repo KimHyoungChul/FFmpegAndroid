@@ -355,7 +355,10 @@ void android_opensles_play_buffer(int, int);
 void android_opensles_callback(SLAndroidSimpleBufferQueueItf, void*);
 
 void ff_log_callback(void *ptr, int level, const char*fmt, va_list va) {
-    __android_log_print(ANDROID_LOG_INFO, "zd-ffmpeg", fmt, va);
+    char *info = (char*)malloc(sizeof(char) * 4096);
+    vsprintf(info, fmt, va);
+    __android_log_write(ANDROID_LOG_INFO, "zd-ffmpeg", info);
+    free(info);
 }
 /**
  *  libffmpegHelper.so 被加载
@@ -2121,7 +2124,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1f
     int video_index = -1;
     int got_picture =  0;
     int frame_cnt = 0;
-    //av_log_set_callback(ff_log_callback);
+    av_log_set_callback(ff_log_callback);
     av_register_all();
     avcodec_register_all();
     avfilter_register_all();
@@ -2161,12 +2164,10 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1f
     pFilterInCtx  = (AVFilterContext*)av_malloc(sizeof(AVFilterContext));
     pFilterOutCtx = (AVFilterContext*)av_malloc(sizeof(AVFilterContext));
     pBufferSrc    = avfilter_get_by_name("buffer");
-    pBufferSink   = avfilter_get_by_name("boxblur");
+    pBufferSink   = avfilter_get_by_name("buffersink");
     pFilterGraph  = avfilter_graph_alloc();
     pInput        = avfilter_inout_alloc();
     pOutput       = avfilter_inout_alloc();
-    pParams       = av_buffersink_params_alloc();
-    pParams->pixel_fmts = pix_fmts;
 
     char *inArgs  = (char*)malloc(sizeof(char) * 1024);
     char *outArgs = (char*)malloc(sizeof(char) * 1024);
@@ -2176,27 +2177,30 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1f
             pCodecCtx->pix_fmt,
             pCodecCtx->time_base.num, pCodecCtx->time_base.den,
             pCodecCtx->sample_aspect_ratio.num, pCodecCtx->sample_aspect_ratio.den);
-    sprintf(outArgs, "movie=%s[wm];[in][wm]overlay=5:5[out]", filterfile);
+    sprintf(outArgs, "%s", "scale=78:24,transpose=cclock");
+
     if (avfilter_graph_create_filter(&pFilterInCtx, pBufferSrc, "in", inArgs, 0, pFilterGraph) < 0) {
         __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avfilter_graph_create_filter error1");
         return;
     }
-    if (avfilter_graph_create_filter(&pFilterOutCtx, pBufferSink, "out", 0, pParams, pFilterGraph) < 0) {
+    if (avfilter_graph_create_filter(&pFilterOutCtx, pBufferSink, "out", 0, 0, pFilterGraph) < 0) {
         __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avfilter_graph_create_filter error2");
         return;
     }
-    av_free(pParams);
 
-    pInput->name        = av_strdup("in");
-    pInput->filter_ctx  = pFilterInCtx;
-    pInput->pad_idx     = 0;
-    pInput->next        = 0;
+    pOutput->name        = av_strdup("in");
+    pOutput->filter_ctx  = pFilterInCtx;
+    pOutput->pad_idx     = 0;
+    pOutput->next        = 0;
 
-    pOutput->name       = av_strdup("out");
-    pOutput->filter_ctx = pFilterOutCtx;
-    pOutput->pad_idx    = 0;
-    pOutput->next       = 0;
-
+    pInput->name       = av_strdup("out");
+    pInput->filter_ctx = pFilterOutCtx;
+    pInput->pad_idx    = 0;
+    pInput->next       = 0;
+    if (av_opt_set_int_list(pFilterOutCtx, "pix_fmts", pix_fmts, AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "av_opt_set_int_list error");
+        return;
+    }
     if (avfilter_graph_parse_ptr(pFilterGraph, outArgs, &pInput, &pOutput, 0) < 0) {
         __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avfilter_graph_parse_ptr error");
         return;
@@ -2205,12 +2209,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1f
         __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avfilter_graph_config error");
         return;
     }
-    while (av_read_frame(pFormatCtx, pPacket) > 0) {
+    while (av_read_frame(pFormatCtx, pPacket) >= 0) {
         if (pPacket->stream_index == video_index) {
-            if (avcodec_decode_video2(pCodecCtx, pFrameIn, &got_picture, pPacket) < 0) {
-                break;
-            }
-            if (got_picture) {
+            if (avcodec_decode_video2(pCodecCtx, pFrameIn, &got_picture, pPacket) >= 0 && got_picture) {
                 pFrameIn->pts = av_frame_get_best_effort_timestamp(pFrameIn);
                 if (av_buffersrc_add_frame(pFilterInCtx, pFrameIn) < 0) {
                     __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "av_buffersrc_add_frame error");
@@ -2223,7 +2224,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1f
                     }
                     frame_cnt++;
                     char *filename = (char*)malloc(sizeof(char) * 4096);
-                    sprintf(filename, "/mnt/sdcard/test/%d_%dx%d.yuv", frame_cnt, pCodecCtx->width, pCodecCtx->height);
+                    sprintf(filename, "/mnt/sdcard/test/%d_%dx%d.yuv", frame_cnt, pFrameOut->width, pFrameOut->height);
 
                     FILE *fileyuv = fopen(filename, "wb+");
                     for (int i = 0; i < pFrameOut->height; i++) {
