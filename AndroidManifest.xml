@@ -202,6 +202,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleYuv420pFilterActivity"
             android:label="@string/simple_yuv420p_filter_name" >
         </activity>
+        <!-- SimpleYuv420pSpecFilterActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleYuv420pSpecFilterActivity"
+            android:label="@string/simple_yuv420p_spec_filter_name" >
+        </activity>
     </application>
 
 </manifest>

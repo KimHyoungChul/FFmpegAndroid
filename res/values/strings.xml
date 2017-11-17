@@ -37,6 +37,7 @@
     <string name="simple_yuv420p_to_h265_name">simple yuv420p to h265</string>
     <string name="simple_video_audio_remuxer_name">simple video audio remuxer</string>
     <string name="simple_yuv420p_filter_name">simple yuv420p filter name</string>
+    <string name="simple_yuv420p_spec_filter_name">simple yuv420p spec filter name</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -385,6 +386,20 @@
     <string name="simple_yuv420p_filter_toast_srcfile">请输入源文件</string>
     <string name="simple_yuv420p_filter_toast_filterfile">请输入水印文件</string>
     <string name="simple_yuv420p_filter_toast_frame">请输入帧数</string>
+    <!-- SimpleYuv420pFilterActivity -->
+    <string name="simple_yuv420p_spec_filter_srcfile">源文件</string>
+    <string name="simple_yuv420p_spec_filter_filterfile">水印文件</string>
+    <string name="simple_yuv420p_spec_filter_srcfile_hint">这里填入源文件</string>
+    <string name="simple_yuv420p_spec_filter_filterfile_hint">这里填入水印文件</string>
+    <string name="simple_yuv420p_spec_filter_width_hint">请输入宽</string>
+    <string name="simple_yuv420p_spec_filter_height_hint">请输入高</string>
+    <string name="simple_yuv420p_spec_filter_filter_hint">这里填入 filter</string>
+    <string name="simple_yuv420p_spec_filter_start">开始</string>
+    <string name="simple_yuv420p_spec_filter_toast_srcfile">请输入源文件</string>
+    <string name="simple_yuv420p_spec_filter_toast_filterfile">请输入水印文件</string>
+    <string name="simple_yuv420p_spec_filter_toast_filter">请填入 filter</string>
+    <string name="simple_yuv420p_spec_filter_toast_width_hint">请输入宽</string>
+    <string name="simple_yuv420p_spec_filter_toast_height_hint">请输入高</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -404,6 +419,7 @@
         <item>simple yuv420p to h265</item>
         <item>simple video audio remuxer</item>
         <item>simple yuv420p filter</item>
+        <item>simple yuv420p spec filter name</item>
     </string-array>
     
     <string-array name="yuv_list">

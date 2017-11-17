@@ -2242,3 +2242,116 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1f
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jfilterfile, filterfile);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1spec_1filter
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile, jstring jfilter, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+    char *filter  = (char*)env->GetStringUTFChars(jfilter,  0);
+
+    FILE *filesrc = fopen(srcfile, "rb+");
+    FILE *filedst = fopen(dstfile, "wb+");
+
+    char *src_buff = 0;
+    char *dst_buff = 0;
+    int   size     = 0;
+    int   ret      = 0;
+
+    AVFrame            *pFrameIn      = 0;
+    AVFrame            *pFrameOut     = 0;
+    AVFilterContext    *pFilterInCtx  = 0;
+    AVFilterContext    *pFilterOutCtx = 0;
+    AVFilterGraph      *pFilterGraph  = 0;
+    AVFilter           *pBufferSrc    = 0;
+    AVFilter           *pBufferSink   = 0;
+    AVFilterInOut      *pInput        = 0;
+    AVFilterInOut      *pOutput       = 0;
+    AVBufferSinkParams *pParams       = 0;
+    AVPixelFormat       pix_fmts[]    = {AV_PIX_FMT_YUV420P, AV_PIX_FMT_NONE};
+
+    av_log_set_callback(ff_log_callback);
+    avfilter_register_all();
+    pFilterInCtx  = (AVFilterContext*)av_malloc(sizeof(AVFilterContext));
+    pFilterOutCtx = (AVFilterContext*)av_malloc(sizeof(AVFilterContext));
+    pFilterGraph  = avfilter_graph_alloc();
+    pBufferSrc    = avfilter_get_by_name("buffer");
+    pBufferSink   = avfilter_get_by_name("buffersink");
+    pInput        = avfilter_inout_alloc();
+    pOutput       = avfilter_inout_alloc();
+    pParams       = av_buffersink_params_alloc();
+    pParams->pixel_fmts = pix_fmts;
+    // 初始化 filter str
+    char *inArgs  = (char*)malloc(sizeof(char) * 4096);
+    char *outArgs = (char*)malloc(sizeof(char) * 4096);
+    sprintf(inArgs, "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
+            width, height, AV_PIX_FMT_YUV420P, 1, 25, 1, 1);
+    sprintf(outArgs, "%s", filter);
+
+    if (avfilter_graph_create_filter(&pFilterInCtx, pBufferSrc, "in", inArgs, 0, pFilterGraph) < 0) {
+        return;
+    }
+    if (avfilter_graph_create_filter(&pFilterOutCtx, pBufferSink, "out", 0, pParams, pFilterGraph) < 0) {
+        return;
+    }
+    pOutput->name       = av_strdup("in");
+    pOutput->filter_ctx = pFilterInCtx;
+    pOutput->pad_idx    = 0;
+    pOutput->next       = 0;
+
+    pInput->name       = av_strdup("out");
+    pInput->filter_ctx = pFilterOutCtx;
+    pInput->pad_idx    = 0;
+    pInput->next       = 0;
+    if (avfilter_graph_parse_ptr(pFilterGraph, outArgs, &pInput, &pOutput, 0) < 0) {
+        return;
+    }
+    if (avfilter_graph_config(pFilterGraph, 0) < 0) {
+        return;
+    }
+    // 初始化 AVFrame
+    pFrameIn = av_frame_alloc();
+    size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, width, height, 1);
+    src_buff = (char*)av_malloc(size);
+    av_image_fill_arrays(pFrameIn->data, pFrameIn->linesize, (const uint8_t*)src_buff, AV_PIX_FMT_YUV420P, width, height, 1);
+    // 初始化 AVFrame
+    pFrameOut = av_frame_alloc();
+    size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, width, height, 1);
+    dst_buff = (char*)av_malloc(size);
+    av_image_fill_arrays(pFrameOut->data, pFrameOut->linesize, (const uint8_t*)dst_buff, AV_PIX_FMT_YUV420P, width, height, 1);
+
+    fread(src_buff, width * height * 3 / 2, 1, filesrc);
+    pFrameIn->data[0] = (uint8_t*)src_buff;
+    pFrameIn->data[1] = (uint8_t*)(pFrameIn->data[0] + (width * height));
+    pFrameIn->data[2] = (uint8_t*)(pFrameIn->data[1] + ((width * height) / 4));
+    pFrameIn->width   = width;
+    pFrameIn->height  = height;
+    pFrameIn->format  = AV_PIX_FMT_YUV420P;
+
+    ret = av_buffersrc_add_frame(pFilterInCtx, pFrameIn);
+    if (ret < 0) {
+        return;
+    }
+    ret = av_buffersink_get_frame(pFilterOutCtx, pFrameOut);
+    if (ret < 0) {
+        return;
+    }
+    // 保存文件
+    for (int i = 0; i < height; i++) {
+        fwrite(pFrameOut->data[0] + (i * pFrameOut->linesize[0]), 1, pFrameOut->linesize[0], filedst);
+    }
+    for (int i = 0; i < height / 2; i++) {
+        fwrite(pFrameOut->data[1] + (i * pFrameOut->linesize[1]), 1, pFrameOut->linesize[1], filedst);
+    }
+    for (int i = 0; i < height / 2; i++) {
+        fwrite(pFrameOut->data[2] + (i * pFrameOut->linesize[2]), 1, pFrameOut->linesize[2], filedst);
+    }
+    av_frame_unref(pFrameIn);
+    av_frame_unref(pFrameOut);
+    avfilter_graph_free(&pFilterGraph);
+    fclose(filesrc);
+    fclose(filedst);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+    env->ReleaseStringUTFChars(jfilter,  filter);
+}
