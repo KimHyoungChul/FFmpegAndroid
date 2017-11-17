@@ -2101,40 +2101,39 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1video_1audio_1
 
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1filter
   (JNIEnv *env, jclass, jstring jsrcfile, jstring jfilterfile, jint frame) {
-    char *srcfile    = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
     char *filterfile = (char*)env->GetStringUTFChars(jfilterfile, 0);
 
-    AVFormatContext    *pFormatCtx    = 0;
-    AVCodecContext     *pCodecCtx     = 0;
-    AVCodec            *pCodec        = 0;
-    AVPacket           *pPacket       = 0;
-    AVFrame            *pFrameIn      = 0;
-    AVFrame            *pFrameOut     = 0;
+    AVFormatContext       *pFormatCtx    = 0;
+    AVCodecContext        *pCodecCtx     = 0;
+    AVCodec               *pCodec        = 0;
+    AVPacket              *pPacket       = 0;
+    AVFrame               *pFrameIn      = 0;
+    AVFrame               *pFrameOut     = 0;
 
-    AVFilterContext    *pFilterInCtx  = 0;
-    AVFilterContext    *pFilterOutCtx = 0;
-    AVFilterGraph      *pFilterGraph  = 0;
-    AVFilter           *pBufferSrc    = 0;
-    AVFilter           *pBufferSink   = 0;
-    AVFilterInOut      *pInput        = 0;
-    AVFilterInOut      *pOutput       = 0;
-    AVBufferSinkParams *pParams       = 0;
-    enum AVPixelFormat  pix_fmts[]    = {AV_PIX_FMT_YUV420P, AV_PIX_FMT_NONE};
+    AVFilterContext       *pFilterInCtx  = 0;
+    AVFilterContext       *pFilterOutCtx = 0;
+    AVFilter              *pBufferSrc    = 0;
+    AVFilter              *pBufferSink   = 0;
+    AVFilterGraph         *pFilterGraph  = 0;
+    AVFilterInOut         *pInput        = 0;
+    AVFilterInOut         *pOutput       = 0;
+    AVBufferSinkParams    *pParams       = 0;
 
+    AVPixelFormat pix_fmts[] = {AV_PIX_FMT_YUV420P, AV_PIX_FMT_NONE};
     int video_index = -1;
-    int got_picture =  0;
-    int frame_cnt = 0;
+    int got_picture = 0;
+    int frame_cnt   = 0;
+
     av_log_set_callback(ff_log_callback);
     av_register_all();
     avcodec_register_all();
     avfilter_register_all();
     pFormatCtx = avformat_alloc_context();
     if (avformat_open_input(&pFormatCtx, srcfile, 0, 0) != 0) {
-        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
         return;
     }
     if (avformat_find_stream_info(pFormatCtx, 0) < 0) {
-        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
         return;
     }
     for (int i = 0; i < pFormatCtx->nb_streams; i++) {
@@ -2144,23 +2143,21 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1f
         }
     }
     if (video_index == -1) {
-        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found video stream info");
         return;
     }
     pCodecCtx = pFormatCtx->streams[video_index]->codec;
     pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
     if (!pCodec) {
-        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_find_decoder error");
         return;
     }
     if (avcodec_open2(pCodecCtx, pCodec, 0) < 0) {
-        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_open2 error");
         return;
     }
+    // 初始化 AVFrame
     pFrameIn = av_frame_alloc();
     pFrameOut = av_frame_alloc();
     pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
-
+    // 初始化 AVFilter
     pFilterInCtx  = (AVFilterContext*)av_malloc(sizeof(AVFilterContext));
     pFilterOutCtx = (AVFilterContext*)av_malloc(sizeof(AVFilterContext));
     pBufferSrc    = avfilter_get_by_name("buffer");
@@ -2168,82 +2165,75 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1f
     pFilterGraph  = avfilter_graph_alloc();
     pInput        = avfilter_inout_alloc();
     pOutput       = avfilter_inout_alloc();
+    pParams       = av_buffersink_params_alloc();
+    pParams->pixel_fmts = pix_fmts;
 
-    char *inArgs  = (char*)malloc(sizeof(char) * 1024);
-    char *outArgs = (char*)malloc(sizeof(char) * 1024);
-    sprintf(inArgs,
-            "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
+    char *inArgs  = (char*)malloc(sizeof(char) * 4096);
+    char *outArgs = (char*)malloc(sizeof(char) * 4096);
+    sprintf(inArgs, "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
             pCodecCtx->width, pCodecCtx->height,
             pCodecCtx->pix_fmt,
             pCodecCtx->time_base.num, pCodecCtx->time_base.den,
             pCodecCtx->sample_aspect_ratio.num, pCodecCtx->sample_aspect_ratio.den);
-    sprintf(outArgs, "%s", "scale=78:24,transpose=cclock");
-
-    if (avfilter_graph_create_filter(&pFilterInCtx, pBufferSrc, "in", inArgs, 0, pFilterGraph) < 0) {
-        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avfilter_graph_create_filter error1");
+    sprintf(outArgs, "movie=%s[wm];[in][wm]overlay=5:5[out]", filterfile);
+    if (avfilter_graph_create_filter(&pFilterInCtx, pBufferSrc, "in", inArgs, 0, pFilterGraph) != 0) {
         return;
     }
-    if (avfilter_graph_create_filter(&pFilterOutCtx, pBufferSink, "out", 0, 0, pFilterGraph) < 0) {
-        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avfilter_graph_create_filter error2");
+    if (avfilter_graph_create_filter(&pFilterOutCtx, pBufferSink, "out", 0, pParams, pFilterGraph) != 0) {
         return;
     }
-
-    pOutput->name        = av_strdup("in");
-    pOutput->filter_ctx  = pFilterInCtx;
-    pOutput->pad_idx     = 0;
-    pOutput->next        = 0;
+    pOutput->name       = av_strdup("in");
+    pOutput->filter_ctx = pFilterInCtx;
+    pOutput->pad_idx    = 0;
+    pOutput->next       = 0;
 
     pInput->name       = av_strdup("out");
     pInput->filter_ctx = pFilterOutCtx;
     pInput->pad_idx    = 0;
     pInput->next       = 0;
-    if (av_opt_set_int_list(pFilterOutCtx, "pix_fmts", pix_fmts, AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN) < 0) {
-        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "av_opt_set_int_list error");
-        return;
-    }
+
     if (avfilter_graph_parse_ptr(pFilterGraph, outArgs, &pInput, &pOutput, 0) < 0) {
-        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avfilter_graph_parse_ptr error");
         return;
     }
     if (avfilter_graph_config(pFilterGraph, 0) < 0) {
-        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avfilter_graph_config error");
         return;
     }
-    while (av_read_frame(pFormatCtx, pPacket) >= 0) {
+    while (av_read_frame(pFormatCtx, pPacket) >= 0 && frame_cnt < frame) {
         if (pPacket->stream_index == video_index) {
-            if (avcodec_decode_video2(pCodecCtx, pFrameIn, &got_picture, pPacket) >= 0 && got_picture) {
+            int ret = avcodec_decode_video2(pCodecCtx, pFrameIn, &got_picture, pPacket);
+            if (ret > 0 & got_picture) {
                 pFrameIn->pts = av_frame_get_best_effort_timestamp(pFrameIn);
                 if (av_buffersrc_add_frame(pFilterInCtx, pFrameIn) < 0) {
-                    __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "av_buffersrc_add_frame error");
                     break;
                 }
                 while (1) {
-                    if (av_buffersink_get_frame(pFilterOutCtx, pFrameOut) < 0) {
-                        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "av_buffersink_get_frame error");
+                    int ret = av_buffersink_get_frame(pFilterOutCtx, pFrameOut);
+                    if (ret < 0) {
                         break;
                     }
-                    frame_cnt++;
-                    char *filename = (char*)malloc(sizeof(char) * 4096);
-                    sprintf(filename, "/mnt/sdcard/test/%d_%dx%d.yuv", frame_cnt, pFrameOut->width, pFrameOut->height);
-
-                    FILE *fileyuv = fopen(filename, "wb+");
-                    for (int i = 0; i < pFrameOut->height; i++) {
-                        fwrite(pFrameOut->data[0] + (i * pFrameOut->linesize[0]), 1, pFrameOut->linesize[0], fileyuv);
+                    // 保存 yuv420p
+                    char *filename = (char*)malloc(sizeof(char) * 1024);
+                    sprintf(filename, "/mnt/sdcard/test/%d_%dx%d.yuv", frame_cnt++, pCodecCtx->width, pCodecCtx->height);
+                    FILE *f = fopen(filename, "wb+");
+                    int width = pCodecCtx->width;
+                    int height = pCodecCtx->height;
+                    for (int i = 0; i < height; i++) {
+                        fwrite(pFrameOut->data[0] + (i * pFrameOut->linesize[0]), 1, pFrameOut->linesize[0], f);
                     }
-                    for (int i = 0; i < pFrameOut->height / 2; i++) {
-                        fwrite(pFrameOut->data[1] + (i * pFrameOut->linesize[1]), 1, pFrameOut->linesize[1], fileyuv);
+                    for (int i = 0; i < height / 2; i++) {
+                        fwrite(pFrameOut->data[1] + (i * pFrameOut->linesize[1]), 1, pFrameOut->linesize[1], f);
                     }
-                    for (int i = 0; i < pFrameOut->height / 2; i++) {
-                        fwrite(pFrameOut->data[2] + (i * pFrameOut->linesize[2]), 1, pFrameOut->linesize[2], fileyuv);
+                    for (int i = 0; i < height / 2; i++) {
+                        fwrite(pFrameOut->data[2] + (i * pFrameOut->linesize[2]), 1, pFrameOut->linesize[2], f);
                     }
-                    fclose(fileyuv);
+                    fclose(f);
                     free(filename);
+                    av_frame_unref(pFrameOut);
                 }
-                av_frame_unref(pFrameOut);
+                av_frame_unref(pFrameIn);
             }
-            av_frame_unref(pFrameIn);
+            av_free_packet(pPacket);
         }
-        av_free_packet(pPacket);
     }
     avfilter_graph_free(&pFilterGraph);
     avcodec_close(pCodecCtx);
