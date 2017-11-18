@@ -38,6 +38,7 @@
     <string name="simple_video_audio_remuxer_name">simple video audio remuxer</string>
     <string name="simple_yuv420p_filter_name">simple yuv420p filter name</string>
     <string name="simple_yuv420p_spec_filter_name">simple yuv420p spec filter name</string>
+    <string name="simple_ffmpeg_device_name">simple ffmpeg device</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -400,6 +401,8 @@
     <string name="simple_yuv420p_spec_filter_toast_filter">请填入 filter</string>
     <string name="simple_yuv420p_spec_filter_toast_width_hint">请输入宽</string>
     <string name="simple_yuv420p_spec_filter_toast_height_hint">请输入高</string>
+    <!-- SimpleFFmpegDeviceActivity -->
+    <string name="simple_ffmpeg_device_start">开始</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -420,6 +423,7 @@
         <item>simple video audio remuxer</item>
         <item>simple yuv420p filter</item>
         <item>simple yuv420p spec filter name</item>
+        <item>simple ffmpeg device</item>
     </string-array>
     
     <string-array name="yuv_list">

@@ -107,6 +107,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1f
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1spec_1filter
   (JNIEnv *, jclass, jstring, jstring, jstring, jint, jint);
 
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1avdevice
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

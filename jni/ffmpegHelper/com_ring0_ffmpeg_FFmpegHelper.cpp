@@ -24,6 +24,7 @@ extern "C" {
 #include <libavutil/pixfmt.h>
 #include <libavutil/samplefmt.h>
 #include <libavutil/opt.h>
+#include <libavdevice/avdevice.h>
 }
 #include <android/log.h>
 
@@ -2354,4 +2355,62 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1spec_
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jdstfile, dstfile);
     env->ReleaseStringUTFChars(jfilter,  filter);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1avdevice
+  (JNIEnv *, jclass) {
+    AVFormatContext *pFormatCtx  =  0;
+    AVCodecContext  *pCodecCtx   =  0;
+    AVInputFormat   *pInputCtx   =  0;
+    AVCodec         *pCodec      =  0;
+    AVPacket        *pPacket     =  0;
+    AVFrame         *pFrame      =  0;
+    int              video_index = -1;
+    int              got_picture =  0;
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    avdevice_register_all();
+    avformat_network_init();
+    pFormatCtx = avformat_alloc_context();
+    pInputCtx = av_find_input_format("v4l2");
+    if (avformat_open_input(&pFormatCtx, "/dev/video1", pInputCtx, 0) != 0) {
+        __android_log_write(ANDROID_LOG_INFO, "zd-ff", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pFormatCtx, 0) < 0) {
+        __android_log_write(ANDROID_LOG_INFO, "zd-ff", "avformat_find_stream_info error");
+        return;
+    }
+    for (int i = 0; i < pFormatCtx->nb_streams; i++) {
+        if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_index = i;
+            break;
+        }
+    }
+    if (video_index == -1) {
+        __android_log_write(ANDROID_LOG_INFO, "zd-ff", "not found video stream");
+        return;
+    }
+    pCodecCtx = pFormatCtx->streams[video_index]->codec;
+    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    if (!pCodec) {
+        __android_log_write(ANDROID_LOG_INFO, "zd-ff", "avcodec_find_decoder error");
+        return;
+    }
+    pFrame = av_frame_alloc();
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    while (av_read_frame(pFormatCtx, pPacket) >= 0) {
+        if (pPacket->stream_index == video_index) {
+            int ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, pPacket);
+            if (ret > 0 && got_picture) {
+                __android_log_write(ANDROID_LOG_INFO, "zd-ff", "decoder");
+            }
+            av_frame_unref(pFrame);
+        }
+        av_free_packet(pPacket);
+    }
+
+    avcodec_close(pCodecCtx);
+    avformat_close_input(&pFormatCtx);
 }

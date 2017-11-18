@@ -122,4 +122,6 @@ public class FFmpegHelper {
     public static native void simple_yuv420p_to_filter(String srcfile, String filterfile, int frame);
     // 添加指定的 filter
     public static native void simple_yuv420p_spec_filter(String srcfile, String filterfile, String filter, int width, int height);
+    // simple avdevice
+    public static native void simple_ffmpeg_avdevice();
 }
