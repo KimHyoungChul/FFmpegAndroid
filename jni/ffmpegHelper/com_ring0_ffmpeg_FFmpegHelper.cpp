@@ -2442,7 +2442,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1swscal
     fread(pFrameIn->data[1], (width * height) / 4, 1, filesrc);
     fread(pFrameIn->data[0], (width * height) / 4, 1, filesrc);
     // 转换
-    sws_scale(pSwsCtx, pFrameIn->data, pFrameIn->linesize, 0, height, (uint8_t* const*)pFrameOut->data, pFrameOut->linesize);
+    sws_scale(pSwsCtx, (uint8_t* const*)pFrameIn->data, pFrameIn->linesize, 0, height, (uint8_t* const*)pFrameOut->data, pFrameOut->linesize);
     // 保存
     fwrite(pFrameOut->data[0], av_image_get_buffer_size(AV_PIX_FMT_RGB24, width, height, 1), 1, filedst);
     // 关闭
