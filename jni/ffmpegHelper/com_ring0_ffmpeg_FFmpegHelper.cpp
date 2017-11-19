@@ -2414,3 +2414,43 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1avdevi
     avcodec_close(pCodecCtx);
     avformat_close_input(&pFormatCtx);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1swscale
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jdstfile, jint width, jint height) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *dstfile = (char*)env->GetStringUTFChars(jdstfile, 0);
+
+    FILE *filesrc = fopen(srcfile, "rb+");
+    FILE *filedst = fopen(dstfile, "wb+");
+    int size = 0;
+    AVFrame    *pFrameIn  = 0;
+    AVFrame    *pFrameOut = 0;
+    SwsContext *pSwsCtx   = 0;
+
+    pFrameIn  = av_frame_alloc();
+    pFrameOut = av_frame_alloc();
+    size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, width, height, 1);
+    av_image_fill_arrays(pFrameIn->data, pFrameIn->linesize, (const uint8_t*)av_malloc(size), AV_PIX_FMT_YUV420P, width, height, 1);
+
+    size = av_image_get_buffer_size(AV_PIX_FMT_RGB24, width, height, 1);
+    av_image_fill_arrays(pFrameOut->data, pFrameOut->linesize, (const uint8_t*)av_malloc(size), AV_PIX_FMT_RGB24, width, height, 1);
+
+    pSwsCtx = sws_getContext(width, height, AV_PIX_FMT_YUV420P, width, height, AV_PIX_FMT_RGB24, SWS_BICUBIC, 0, 0, 0);
+
+    // 读取数据
+    fread(pFrameIn->data[0], width * height, 1, filesrc);
+    fread(pFrameIn->data[1], (width * height) / 4, 1, filesrc);
+    fread(pFrameIn->data[0], (width * height) / 4, 1, filesrc);
+    // 转换
+    sws_scale(pSwsCtx, pFrameIn->data, pFrameIn->linesize, 0, height, (uint8_t* const*)pFrameOut->data, pFrameOut->linesize);
+    // 保存
+    fwrite(pFrameOut->data[0], av_image_get_buffer_size(AV_PIX_FMT_RGB24, width, height, 1), 1, filedst);
+    // 关闭
+    fclose(filesrc);
+    fclose(filedst);
+    av_frame_free(&pFrameIn);
+    av_frame_free(&pFrameOut);
+    sws_freeContext(pSwsCtx);
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jdstfile, dstfile);
+}

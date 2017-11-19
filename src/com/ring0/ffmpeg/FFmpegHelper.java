@@ -124,4 +124,6 @@ public class FFmpegHelper {
     public static native void simple_yuv420p_spec_filter(String srcfile, String filterfile, String filter, int width, int height);
     // simple avdevice
     public static native void simple_ffmpeg_avdevice();
+    // simple swscale
+    public static native void simple_ffmpeg_swscale(String srcfile, String dstfile, int width, int height);
 }

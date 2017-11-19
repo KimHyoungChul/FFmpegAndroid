@@ -39,6 +39,7 @@
     <string name="simple_yuv420p_filter_name">simple yuv420p filter name</string>
     <string name="simple_yuv420p_spec_filter_name">simple yuv420p spec filter name</string>
     <string name="simple_ffmpeg_device_name">simple ffmpeg device</string>
+    <string name="simple_ffmpeg_swscale_name">simple ffmpeg swscale</string>
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -403,6 +404,18 @@
     <string name="simple_yuv420p_spec_filter_toast_height_hint">请输入高</string>
     <!-- SimpleFFmpegDeviceActivity -->
     <string name="simple_ffmpeg_device_start">开始</string>
+    <!-- SimpleFFmpegSwscaleActivity -->
+    <string name="simple_ffmpeg_swscale_srcfile">yuv 文件</string>
+    <string name="simple_ffmpeg_swscale_dstfile">rgb 文件</string>
+    <string name="simple_ffmpeg_swscale_srcfile_hint">这里填入 yuv 文件</string>
+    <string name="simple_ffmpeg_swscale_dstfile_hint">这里填入 rgb 文件</string>
+    <string name="simple_ffmpeg_swscale_width">宽</string>
+    <string name="simple_ffmpeg_swscale_height">高</string>
+    <string name="simple_ffmpeg_swscale_start">开始</string>
+    <string name="simple_ffmpeg_swscale_toast_srcfile">请输入 yuv 文件</string>
+    <string name="simple_ffmpeg_swscale_toast_dstfile">请输入 rgb 文件</string>
+    <string name="simple_ffmpeg_swscale_toast_width">请输入宽</string>
+    <string name="simple_ffmpeg_swscale_toast_height">请输入高</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -424,6 +437,7 @@
         <item>simple yuv420p filter</item>
         <item>simple yuv420p spec filter name</item>
         <item>simple ffmpeg device</item>
+        <item>simple ffmpeg swscale</item>
     </string-array>
     
     <string-array name="yuv_list">
