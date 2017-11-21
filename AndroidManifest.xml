@@ -217,6 +217,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleFFmpegSwscaleActivity"
             android:label="@string/simple_ffmpeg_swscale_name" >
         </activity>
+        <!-- SimpleFFmpegDemuxerActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleFFmpegDemuxerActivity"
+            android:label="@string/simple_ffmpeg_demuxer_name" >
+        </activity>
     </application>
 
 </manifest>

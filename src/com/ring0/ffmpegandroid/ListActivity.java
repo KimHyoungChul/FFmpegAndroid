@@ -181,6 +181,10 @@ public class ListActivity extends Activity implements View.OnClickListener {
             intent = new Intent(this, SimpleFFmpegSwscaleActivity.class);
             startActivity(intent);
             break;
+        case 20: // simple ffmpeg demuxer
+            intent = new Intent(this, SimpleFFmpegDemuxerActivity.class);
+            startActivity(intent);
+            break;
         }
     }
 }

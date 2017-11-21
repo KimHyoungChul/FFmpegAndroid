@@ -113,6 +113,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1avdevi
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1swscale
   (JNIEnv *, jclass, jstring, jstring, jint, jint);
 
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1demuxer
+  (JNIEnv *, jclass, jstring, jstring);
+
 #ifdef __cplusplus
 }
 #endif

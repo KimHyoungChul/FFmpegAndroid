@@ -2454,3 +2454,73 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1swscal
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jdstfile, dstfile);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1demuxer
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *path    = (char*)env->GetStringUTFChars(jpath, 0);
+    char *filev   = (char*)malloc(sizeof(char) * 4096);
+    char *filea   = (char*)malloc(sizeof(char) * 4096);
+    sprintf(filev, "%s/video.h264", path);
+    sprintf(filea, "%s/audio.aac",  path);
+    FILE *fv = fopen(filev, "wb+");
+    FILE *fa = fopen(filea, "wb+");
+
+    AVFormatContext           *pFormatCtx = 0;
+    AVPacket                  *pPacket    = 0;
+    AVBitStreamFilterContext  *pbsfc      = 0;
+    int video_index = -1;
+    int audio_index = -1;
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    pFormatCtx = avformat_alloc_context();
+    if (avformat_open_input(&pFormatCtx, srcfile, 0, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pFormatCtx, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
+        return;
+    }
+    for (int i = 0; i < pFormatCtx->nb_streams; i++) {
+        if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_index = i;
+        }
+        else if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audio_index = i;
+        }
+    }
+    if (video_index == -1) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found video stream");
+        return;
+    }
+    if (audio_index == -1) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found audio stream");
+        return;
+    }
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_init_packet(pPacket);
+    pbsfc = av_bitstream_filter_init("h264_mp4toannexb");
+    while (av_read_frame(pFormatCtx, pPacket) >= 0) {
+        if (pPacket->stream_index == video_index) {
+            av_bitstream_filter_filter(pbsfc,
+                    pFormatCtx->streams[video_index]->codec, 0,
+                    &pPacket->data, &pPacket->size,
+                    pPacket->data, pPacket->size, 0);
+            fwrite(pPacket->data, pPacket->size, 1, fv);
+        }
+        else if (pPacket->stream_index == audio_index) {
+            fwrite(pPacket->data, pPacket->size, 1, fa);
+        }
+        av_free_packet(pPacket);
+    }
+    fclose(fv);
+    fclose(fa);
+    av_bitstream_filter_close(pbsfc);
+    avformat_close_input(&pFormatCtx);
+    free(filev);
+    free(filea);
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jpath, path);
+}

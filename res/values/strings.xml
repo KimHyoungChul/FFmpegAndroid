@@ -40,6 +40,8 @@
     <string name="simple_yuv420p_spec_filter_name">simple yuv420p spec filter name</string>
     <string name="simple_ffmpeg_device_name">simple ffmpeg device</string>
     <string name="simple_ffmpeg_swscale_name">simple ffmpeg swscale</string>
+    <string name="simple_ffmpeg_demuxer_name">simple ffmpeg demuxer</string>
+    
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
     <string name="decoder_yuv_filepath">保存路径</string>
@@ -225,7 +227,7 @@
     <string name="simple_rgb24_colorbar_toast_level">请输入级别</string>
     <string name="simple_rgb24_colorbar_toast_width">请输入宽</string>
     <string name="simple_rgb24_colorbar_toast_height">请输入高</string>
-        <!-- SimplePcm16leSplitActivity -->
+    <!-- SimplePcm16leSplitActivity -->
     <string name="simple_pcm16le_split_filename">文件名</string>
     <string name="simple_pcm16le_split_filepath">保存路径</string>
     <string name="simple_pcm16le_split_filename_hint">这里填入要分离的 pcm16le 文件</string>
@@ -416,6 +418,14 @@
     <string name="simple_ffmpeg_swscale_toast_dstfile">请输入 rgb 文件</string>
     <string name="simple_ffmpeg_swscale_toast_width">请输入宽</string>
     <string name="simple_ffmpeg_swscale_toast_height">请输入高</string>
+    <!-- SimpleFFmpegDemuxerActivity -->
+    <string name="simple_ffmpeg_demuxer_filename">文件名</string>
+    <string name="simple_ffmpeg_demuxer_filepath">保存路径</string>
+    <string name="simple_ffmpeg_demuxer_filename_hint">这里填入分离的视频文件</string>
+    <string name="simple_ffmpeg_demuxer_filepath_hint">这里填入分离后保存路径</string>
+    <string name="simple_ffmpeg_demuxer_start">开始</string>
+    <string name="simple_ffmpeg_demuxer_toast_filename">请输入要分离的视频文件</string>
+    <string name="simple_ffmpeg_demuxer_toast_filepath">请输入分离后保存路径</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -438,6 +448,7 @@
         <item>simple yuv420p spec filter name</item>
         <item>simple ffmpeg device</item>
         <item>simple ffmpeg swscale</item>
+        <item>simple ffmpeg demuxer</item>
     </string-array>
     
     <string-array name="yuv_list">

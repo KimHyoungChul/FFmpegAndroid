@@ -126,4 +126,6 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg_avdevice();
     // simple swscale
     public static native void simple_ffmpeg_swscale(String srcfile, String dstfile, int width, int height);
+    // simple ffmpeg demuxer
+    public static native void simple_ffmpeg_demuxer(String srcfile, String path);
 }
