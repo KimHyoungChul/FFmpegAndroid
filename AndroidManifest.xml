@@ -227,6 +227,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleFFmpegDemuxer2Activity"
             android:label="@string/simple_ffmpeg_demuxer2_name" >
         </activity>
+        <!-- SimpleFFmpegMuxerActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleFFmpegMuxerActivity"
+            android:label="@string/simple_ffmpeg_muxer_name" >
+        </activity>
     </application>
 
 </manifest>

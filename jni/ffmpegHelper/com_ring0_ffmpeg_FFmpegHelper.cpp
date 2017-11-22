@@ -2652,3 +2652,170 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1demuxe
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jpath, path);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1muxer
+  (JNIEnv *env, jclass, jstring jvideofile, jstring jaudiofile, jstring jmuxerfile) {
+    char *videofile = (char*)env->GetStringUTFChars(jvideofile, 0);
+    char *audiofile = (char*)env->GetStringUTFChars(jaudiofile, 0);
+    char *muxerfile = (char*)env->GetStringUTFChars(jmuxerfile, 0);
+
+    AVOutputFormat           *pOutputCtx      = 0;
+    AVFormatContext          *pFormatVCtx     = 0;
+    AVFormatContext          *pFormatACtx     = 0;
+    AVFormatContext          *pFormatMuxerCtx = 0;
+    AVPacket                 *pPacket         = 0;
+    AVStream                 *pStreamIn       = 0;
+    AVStream                 *pStreamOut      = 0;
+    AVBitStreamFilterContext *pVBsf           = 0;
+    AVBitStreamFilterContext *pABsf           = 0;
+
+    int video_index     = -1;
+    int audio_index     = -1;
+    int video_index_out = -1;
+    int audio_index_out = -1;
+    int frame_index     =  0;
+    int current_pts_v   =  0;
+    int current_pts_a   =  0;
+
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    pOutputCtx      = av_guess_format(0, muxerfile, 0);
+    pFormatVCtx     = avformat_alloc_context();
+    pFormatACtx     = avformat_alloc_context();
+    pFormatMuxerCtx = avformat_alloc_context();
+    pFormatMuxerCtx->oformat = pOutputCtx;
+    if (avio_open(&pFormatMuxerCtx->pb, muxerfile, AVIO_FLAG_READ_WRITE) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avio_open error");
+        return;
+    }
+    if (avformat_open_input(&pFormatVCtx, videofile, 0, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pFormatVCtx, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
+        return;
+    }
+    if (avformat_open_input(&pFormatACtx, audiofile, 0, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pFormatACtx, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
+        return;
+    }
+    for (int i = 0; i < pFormatVCtx->nb_streams; i++) {
+        if (pFormatVCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            pStreamIn = pFormatVCtx->streams[i];
+            pStreamOut = avformat_new_stream(pFormatMuxerCtx, pStreamIn->codec->codec);
+            if (avcodec_copy_context(pStreamOut->codec, pStreamIn->codec) < 0) {
+                __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_copy_context error");
+                break;
+            }
+            pStreamOut->codec->codec_tag = 0;
+            if (pFormatMuxerCtx->oformat->flags & AVFMT_GLOBALHEADER) {
+                pStreamOut->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+            }
+            video_index = i;
+            video_index_out = pStreamOut->index;
+            break;
+        }
+    }
+    for (int i = 0; i < pFormatACtx->nb_streams; i++) {
+        if (pFormatACtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            pStreamIn = pFormatACtx->streams[i];
+            pStreamOut = avformat_new_stream(pFormatMuxerCtx, pStreamIn->codec->codec);
+            if (avcodec_copy_context(pStreamOut->codec, pStreamIn->codec) < 0) {
+                __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_copy_context error");
+                break;
+            }
+            pStreamOut->codec->codec_tag = 0;
+            if (pFormatMuxerCtx->oformat->flags & AVFMT_GLOBALHEADER) {
+                pStreamOut->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+            }
+            audio_index = i;
+            audio_index_out = pStreamOut->index;
+            break;
+        }
+    }
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_init_packet(pPacket);
+    pVBsf = av_bitstream_filter_init("h264_mp4toannexb");
+    pABsf = av_bitstream_filter_init("aac_adtstoasc");
+    avformat_write_header(pFormatMuxerCtx, 0);
+    while (1) {
+        AVFormatContext *pFormatCtx = 0;
+        AVStream        *pStreamIn  = 0;
+        AVStream        *pStreamOut = 0;
+        if (av_compare_ts(current_pts_v, pFormatVCtx->streams[video_index]->time_base, current_pts_a, pFormatACtx->streams[audio_index]->time_base) <= 0) {
+            pFormatCtx = pFormatVCtx;
+            if (av_read_frame(pFormatCtx, pPacket) >= 0) {
+                do {
+                    pStreamIn  = pFormatCtx->streams[video_index];
+                    pStreamOut = pFormatMuxerCtx->streams[video_index_out];
+                    if (pPacket->stream_index == video_index) {
+                        if (pPacket->pts == AV_NOPTS_VALUE) {
+                            AVRational time_base = pStreamIn->time_base;
+                            int64_t duration = (double)AV_TIME_BASE/av_q2d(pStreamIn->r_frame_rate);
+                            pPacket->pts = (double)(frame_index * duration)/(double)(av_q2d(time_base) * AV_TIME_BASE);
+                            pPacket->dts = pPacket->pts;
+                            pPacket->duration = (double)duration/(double)(av_q2d(time_base) * AV_TIME_BASE);
+
+                            frame_index++;
+                        }
+                        current_pts_v = pPacket->pts;
+                    }
+                } while (av_read_frame(pFormatCtx, pPacket) >= 0);
+            }
+            else {
+                break;
+            }
+        }
+        else {
+            pFormatCtx = pFormatACtx;
+            if (av_read_frame(pFormatCtx, pPacket) >= 0) {
+                do {
+                    pStreamIn  = pFormatCtx->streams[audio_index];
+                    pStreamOut = pFormatMuxerCtx->streams[audio_index_out];
+                    if (pPacket->stream_index == audio_index) {
+                        if (pPacket->pts == AV_NOPTS_VALUE) {
+                            AVRational time_base = pStreamIn->time_base;
+                            int64_t duration = (double)(AV_TIME_BASE/av_q2d(pStreamIn->r_frame_rate));
+                            pPacket->pts = (double)(frame_index * duration)/(double)(av_q2d(time_base) * AV_TIME_BASE);
+                            pPacket->dts = pPacket->pts;
+                            pPacket->duration = (double)duration/(double)(av_q2d(time_base) * AV_TIME_BASE);
+                            frame_index++;
+                        }
+                        current_pts_a = pPacket->pts;
+                    }
+                } while (av_read_frame(pFormatCtx, pPacket) >= 0);
+            }
+            else {
+                break;
+            }
+        }
+        av_bitstream_filter_filter(pVBsf, pStreamIn->codec, 0, &pPacket->data, &pPacket->size, pPacket->data, pPacket->size, 0);
+        //av_bitstream_filter_filter(pABsf, pStreamOut->codec, 0, &pPacket->data, &pPacket->size, pPacket->data, pPacket->size, 0);
+        pPacket->pts = av_rescale_q_rnd(pPacket->pts, pStreamIn->time_base, pStreamOut->time_base, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+        pPacket->dts = av_rescale_q_rnd(pPacket->dts, pStreamIn->time_base, pStreamOut->time_base, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+        pPacket->duration = av_rescale_q(pPacket->duration, pStreamIn->time_base, pStreamOut->time_base);
+        pPacket->pos = -1;
+        pPacket->stream_index = pStreamOut->index;
+        av_interleaved_write_frame(pFormatMuxerCtx, pPacket);
+        av_free_packet(pPacket);
+    }
+    av_write_trailer(pFormatMuxerCtx);
+
+    av_bitstream_filter_close(pVBsf);
+    av_bitstream_filter_close(pABsf);
+    avio_close(pFormatVCtx->pb);
+    avio_close(pFormatACtx->pb);
+    avformat_close_input(&pFormatVCtx);
+    avformat_close_input(&pFormatACtx);
+    avformat_free_context(pFormatMuxerCtx);
+
+    env->ReleaseStringUTFChars(jvideofile, videofile);
+    env->ReleaseStringUTFChars(jaudiofile, audiofile);
+    env->ReleaseStringUTFChars(jmuxerfile, muxerfile);
+}
