@@ -41,6 +41,7 @@
     <string name="simple_ffmpeg_device_name">simple ffmpeg device</string>
     <string name="simple_ffmpeg_swscale_name">simple ffmpeg swscale</string>
     <string name="simple_ffmpeg_demuxer_name">simple ffmpeg demuxer</string>
+    <string name="simple_ffmpeg_demuxer2_name">simple ffmpeg demuxer2</string>
     
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
@@ -426,6 +427,14 @@
     <string name="simple_ffmpeg_demuxer_start">开始</string>
     <string name="simple_ffmpeg_demuxer_toast_filename">请输入要分离的视频文件</string>
     <string name="simple_ffmpeg_demuxer_toast_filepath">请输入分离后保存路径</string>
+    <!-- SimpleFFmpegDemuxer2Activity -->
+    <string name="simple_ffmpeg_demuxer2_filename">文件名</string>
+    <string name="simple_ffmpeg_demuxer2_filepath">保存路径</string>
+    <string name="simple_ffmpeg_demuxer2_filename_hint">这里填入分离的视频文件</string>
+    <string name="simple_ffmpeg_demuxer2_filepath_hint">这里填入分离后保存路径</string>
+    <string name="simple_ffmpeg_demuxer2_start">开始</string>
+    <string name="simple_ffmpeg_demuxer2_toast_filename">请输入要分离的视频文件</string>
+    <string name="simple_ffmpeg_demuxer2_toast_filepath">请输入分离后保存路径</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -449,6 +458,7 @@
         <item>simple ffmpeg device</item>
         <item>simple ffmpeg swscale</item>
         <item>simple ffmpeg demuxer</item>
+        <item>simple ffmpeg demuxer2</item>
     </string-array>
     
     <string-array name="yuv_list">

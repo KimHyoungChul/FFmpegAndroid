@@ -2524,3 +2524,131 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1demuxe
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jpath, path);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1demuxer2
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *path = (char*)env->GetStringUTFChars(jpath, 0);
+    char *dstv = (char*)malloc(sizeof(char) * 1024);
+    char *dsta = (char*)malloc(sizeof(char) * 1024);
+    sprintf(dstv, "%s/output.h264", path);
+    sprintf(dsta, "%s/output.aac",  path);
+
+    AVOutputFormat           *pOutputV    = 0;
+    AVOutputFormat           *pOutputA    = 0;
+    AVFormatContext          *pInputCtx   = 0;
+    AVFormatContext          *pOutputVCtx = 0;
+    AVFormatContext          *pOutputACtx = 0;
+    AVPacket                 *pPacket     = 0;
+    AVStream                 *pStreamIn   = 0;
+    AVStream                 *pStreamOut  = 0;
+    AVBitStreamFilterContext *pBsf        = 0;
+    int video_index = -1;
+    int audio_index = -1;
+
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    pInputCtx   = avformat_alloc_context();
+    pOutputVCtx = avformat_alloc_context();
+    pOutputACtx = avformat_alloc_context();
+    pOutputV    = av_guess_format(0, dstv, 0);
+    pOutputA    = av_guess_format(0, dsta, 0);
+    pOutputVCtx->oformat = pOutputV;
+    pOutputACtx->oformat = pOutputA;
+    if (avio_open(&pOutputVCtx->pb, dstv, AVIO_FLAG_READ_WRITE) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avio_open error");
+        return;
+    }
+    if (avio_open(&pOutputACtx->pb, dsta, AVIO_FLAG_READ_WRITE) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avio_open error");
+        return;
+    }
+    if (avformat_open_input(&pInputCtx, srcfile, 0, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pInputCtx, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
+        return;
+    }
+    for (int i = 0; i < pInputCtx->nb_streams; i++) {
+        AVFormatContext *pFormatCtx = 0;
+        if (pInputCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_index = i;
+            pFormatCtx = pOutputVCtx;
+        }
+        else if (pInputCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audio_index = i;
+            pFormatCtx = pOutputACtx;
+        }
+        pStreamIn = pInputCtx->streams[i];
+        pStreamOut = avformat_new_stream(pFormatCtx, pStreamIn->codec->codec);
+        if (avcodec_copy_context(pStreamOut->codec, pStreamIn->codec) < 0) {
+            __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_copy_context error");
+            break;
+        }
+        pStreamOut->codec->codec_tag = 0;
+        if (pFormatCtx->oformat->flags & AVFMT_GLOBALHEADER) {
+            pStreamOut->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+        }
+    }
+    if (video_index == -1) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found video stream");
+        return;
+    }
+    if (audio_index == -1) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found audio stream");
+        return;
+    }
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_init_packet(pPacket);
+    pBsf = av_bitstream_filter_init("h264_mp4toannexb");
+
+    avformat_write_header(pOutputVCtx, 0);
+    avformat_write_header(pOutputACtx, 0);
+    while (av_read_frame(pInputCtx, pPacket) >= 0) {
+        AVFormatContext *pFormatCtx = 0;
+        if (pPacket->stream_index == video_index) {
+            pFormatCtx = pOutputVCtx;
+            av_bitstream_filter_filter(pBsf, pInputCtx->streams[pPacket->stream_index]->codec, 0,
+                    &pPacket->data, &pPacket->size, pPacket->data, pPacket->size, 0);
+        }
+        else if (pPacket->stream_index == audio_index) {
+            pFormatCtx = pOutputACtx;
+        }
+        if (pFormatCtx) {
+            pPacket->dts = av_rescale_q_rnd(
+                    pPacket->dts,
+                    pInputCtx->streams[pPacket->stream_index]->time_base,
+                    pFormatCtx->streams[0]->time_base,
+                    (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pPacket->pts = av_rescale_q_rnd(
+                    pPacket->pts,
+                    pInputCtx->streams[pPacket->stream_index]->time_base,
+                    pFormatCtx->streams[0]->time_base,
+                    (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pPacket->duration = av_rescale_q(
+                    pPacket->duration,
+                    pInputCtx->streams[pPacket->stream_index]->time_base,
+                    pFormatCtx->streams[0]->time_base);
+            pPacket->pos = -1;
+            pPacket->stream_index = 0;
+            av_interleaved_write_frame(pFormatCtx, pPacket);
+        }
+        av_free_packet(pPacket);
+    }
+    av_write_trailer(pOutputVCtx);
+    av_write_trailer(pOutputACtx);
+
+    avio_close(pOutputVCtx->pb);
+    avio_close(pOutputACtx->pb);
+    av_bitstream_filter_close(pBsf);
+    avformat_close_input(&pInputCtx);
+    avformat_free_context(pOutputVCtx);
+    avformat_free_context(pOutputACtx);
+    free(dstv);
+    free(dsta);
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jpath, path);
+}
