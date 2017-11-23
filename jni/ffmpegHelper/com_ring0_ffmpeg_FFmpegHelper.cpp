@@ -2677,7 +2677,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1muxer
     int current_pts_v   =  0;
     int current_pts_a   =  0;
 
-    av_log_set_callback(ff_log_callback);
+    //av_log_set_callback(ff_log_callback);
     av_register_all();
     avcodec_register_all();
     pOutputCtx      = av_guess_format(0, muxerfile, 0);
@@ -2748,71 +2748,71 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1muxer
         AVFormatContext *pFormatCtx = 0;
         AVStream        *pStreamIn  = 0;
         AVStream        *pStreamOut = 0;
+        bool hasFrame = false;
         if (av_compare_ts(current_pts_v, pFormatVCtx->streams[video_index]->time_base, current_pts_a, pFormatACtx->streams[audio_index]->time_base) <= 0) {
             pFormatCtx = pFormatVCtx;
-            if (av_read_frame(pFormatCtx, pPacket) >= 0) {
-                do {
-                    pStreamIn  = pFormatCtx->streams[video_index];
-                    pStreamOut = pFormatMuxerCtx->streams[video_index_out];
-                    if (pPacket->stream_index == video_index) {
-                        if (pPacket->pts == AV_NOPTS_VALUE) {
-                            AVRational time_base = pStreamIn->time_base;
-                            int64_t duration = (double)AV_TIME_BASE/av_q2d(pStreamIn->r_frame_rate);
-                            pPacket->pts = (double)(frame_index * duration)/(double)(av_q2d(time_base) * AV_TIME_BASE);
-                            pPacket->dts = pPacket->pts;
-                            pPacket->duration = (double)duration/(double)(av_q2d(time_base) * AV_TIME_BASE);
+            while (av_read_frame(pFormatCtx, pPacket) >= 0) {
+                pStreamIn = pFormatCtx->streams[video_index];
+                pStreamOut = pFormatMuxerCtx->streams[video_index_out];
+                if (pPacket->stream_index == video_index) {
+                    if (pPacket->pts == AV_NOPTS_VALUE) {
+                        AVRational time_base = pStreamIn->time_base;
+                        int64_t duration = (double) AV_TIME_BASE / av_q2d(pStreamIn->r_frame_rate);
+                        pPacket->pts = (double) (frame_index * duration) / (double) (av_q2d(time_base) * AV_TIME_BASE);
+                        pPacket->dts = pPacket->pts;
+                        pPacket->duration = (double) duration / (double) (av_q2d(time_base) * AV_TIME_BASE);
 
-                            frame_index++;
-                        }
-                        current_pts_v = pPacket->pts;
+                        frame_index++;
                     }
-                } while (av_read_frame(pFormatCtx, pPacket) >= 0);
-            }
-            else {
-                break;
+                    current_pts_v = pPacket->pts;
+                    hasFrame = true;
+                    break;
+                }
             }
         }
         else {
             pFormatCtx = pFormatACtx;
-            if (av_read_frame(pFormatCtx, pPacket) >= 0) {
-                do {
-                    pStreamIn  = pFormatCtx->streams[audio_index];
-                    pStreamOut = pFormatMuxerCtx->streams[audio_index_out];
-                    if (pPacket->stream_index == audio_index) {
-                        if (pPacket->pts == AV_NOPTS_VALUE) {
-                            AVRational time_base = pStreamIn->time_base;
-                            int64_t duration = (double)(AV_TIME_BASE/av_q2d(pStreamIn->r_frame_rate));
-                            pPacket->pts = (double)(frame_index * duration)/(double)(av_q2d(time_base) * AV_TIME_BASE);
-                            pPacket->dts = pPacket->pts;
-                            pPacket->duration = (double)duration/(double)(av_q2d(time_base) * AV_TIME_BASE);
-                            frame_index++;
-                        }
-                        current_pts_a = pPacket->pts;
+            while (av_read_frame(pFormatCtx, pPacket) >= 0) {
+                pStreamIn = pFormatCtx->streams[audio_index];
+                pStreamOut = pFormatMuxerCtx->streams[audio_index_out];
+                if (pPacket->stream_index == audio_index) {
+                    if (pPacket->pts == AV_NOPTS_VALUE) {
+                        AVRational time_base = pStreamIn->time_base;
+                        int64_t duration = (double) (AV_TIME_BASE / av_q2d(pStreamIn->r_frame_rate));
+                        pPacket->pts = (double) (frame_index * duration) / (double) (av_q2d(time_base) * AV_TIME_BASE);
+                        pPacket->dts = pPacket->pts;
+                        pPacket->duration = (double) duration / (double) (av_q2d(time_base) * AV_TIME_BASE);
+                        frame_index++;
                     }
-                } while (av_read_frame(pFormatCtx, pPacket) >= 0);
-            }
-            else {
-                break;
+                    current_pts_a = pPacket->pts;
+                    hasFrame = true;
+                    break;
+                }
+
             }
         }
-        av_bitstream_filter_filter(pVBsf, pStreamIn->codec, 0, &pPacket->data, &pPacket->size, pPacket->data, pPacket->size, 0);
-        //av_bitstream_filter_filter(pABsf, pStreamOut->codec, 0, &pPacket->data, &pPacket->size, pPacket->data, pPacket->size, 0);
-        pPacket->pts = av_rescale_q_rnd(pPacket->pts, pStreamIn->time_base, pStreamOut->time_base, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
-        pPacket->dts = av_rescale_q_rnd(pPacket->dts, pStreamIn->time_base, pStreamOut->time_base, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
-        pPacket->duration = av_rescale_q(pPacket->duration, pStreamIn->time_base, pStreamOut->time_base);
-        pPacket->pos = -1;
-        pPacket->stream_index = pStreamOut->index;
-        av_interleaved_write_frame(pFormatMuxerCtx, pPacket);
-        av_free_packet(pPacket);
+        if (hasFrame) {
+            av_bitstream_filter_filter(pVBsf, pStreamIn->codec, 0, &pPacket->data, &pPacket->size, pPacket->data, pPacket->size, 0);
+            av_bitstream_filter_filter(pABsf, pStreamIn->codec, 0, &pPacket->data, &pPacket->size, pPacket->data, pPacket->size, 0);
+            pPacket->pts = av_rescale_q_rnd(pPacket->pts, pStreamIn->time_base, pStreamOut->time_base, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pPacket->dts = av_rescale_q_rnd(pPacket->dts, pStreamIn->time_base, pStreamOut->time_base, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pPacket->duration = av_rescale_q(pPacket->duration, pStreamIn->time_base, pStreamOut->time_base);
+            pPacket->pos = -1;
+            pPacket->stream_index = pStreamOut->index;
+            av_interleaved_write_frame(pFormatMuxerCtx, pPacket);
+            av_free_packet(pPacket);
+        }
+        else {
+            break;
+        }
     }
     av_write_trailer(pFormatMuxerCtx);
 
     av_bitstream_filter_close(pVBsf);
     av_bitstream_filter_close(pABsf);
-    avio_close(pFormatVCtx->pb);
-    avio_close(pFormatACtx->pb);
     avformat_close_input(&pFormatVCtx);
     avformat_close_input(&pFormatACtx);
+    avio_close(pFormatMuxerCtx->pb);
     avformat_free_context(pFormatMuxerCtx);
 
     env->ReleaseStringUTFChars(jvideofile, videofile);
