@@ -132,4 +132,6 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg_demuxer2(String srcfile, String path);
     // simple ffmpeg muxer
     public static native void simple_ffmpeg_muxer(String videofile, String audiofile, String muxerfile);
+    // simple ffmpeg memory reader
+    public static native void simple_ffmpeg_memory_reader(String srcfile, String path);
 }
