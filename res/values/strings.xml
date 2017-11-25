@@ -44,6 +44,7 @@
     <string name="simple_ffmpeg_demuxer2_name">simple ffmpeg demuxer2</string>
     <string name="simple_ffmpeg_muxer_name">simple ffmpeg muxer</string>
     <string name="simple_ffmpeg_memory_reader_name">simple ffmpeg memory reader</string>
+    <string name="simple_ffmpeg_memory_writer_name">simple ffmpeg memory writer</string>
     
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
@@ -456,6 +457,14 @@
     <string name="simple_ffmpeg_reader_start">开始</string>
     <string name="simple_ffmpeg_reader_toast_filename">请输入要解码的文件</string>
     <string name="simple_ffmpeg_reader_toast_filepath">请输入解码后的路径</string>
+    <!-- SimpleFFmpegMemoryWriterActivity -->
+    <string name="simple_ffmpeg_writer_filename">文件名</string>
+    <string name="simple_ffmpeg_writer_filepath">保存路径</string>
+    <string name="simple_ffmpeg_writer_filename_hint">这里填入要解码的文件</string>
+    <string name="simple_ffmpeg_writer_filepath_hint">这里填入解码后的路径</string>
+    <string name="simple_ffmpeg_writer_start">开始</string>
+    <string name="simple_ffmpeg_writer_toast_filename">请输入要解码的文件</string>
+    <string name="simple_ffmpeg_writer_toast_filepath">请输入解码后的路径</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -482,6 +491,7 @@
         <item>simple ffmpeg demuxer2</item>
         <item>simple ffmpeg muxer</item>
         <item>simple ffmpeg memory reader</item>
+        <item>simple ffmpeg memory writer</item>
     </string-array>
     
     <string-array name="yuv_list">

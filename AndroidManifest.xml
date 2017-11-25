@@ -237,6 +237,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleFFmpegMemoryReaderActivity"
             android:label="@string/simple_ffmpeg_memory_reader_name" >
         </activity>
+        <!-- SimpleFFmpegMemoryWriterActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleFFmpegMemoryWriterActivity"
+            android:label="@string/simple_ffmpeg_memory_writer_name" >
+        </activity>
     </application>
 
 </manifest>

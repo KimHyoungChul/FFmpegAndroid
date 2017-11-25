@@ -197,6 +197,10 @@ public class ListActivity extends Activity implements View.OnClickListener {
             intent = new Intent(this, SimpleFFmpegMemoryReaderActivity.class);
             startActivity(intent);
             break;
+        case 24: // simple ffmpeg memory writer
+            intent = new Intent(this, SimpleFFmpegMemoryWriterActivity.class);
+            startActivity(intent);
+            break;
         }
     }
 }
