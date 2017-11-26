@@ -2958,7 +2958,6 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1memory
 
     AVFormatContext *pOutputCtx      = 0;
     AVCodecContext  *pOutputCodecCtx = 0;
-    AVOutputFormat  *pOutputFmtCtx   = 0;
     AVIOContext     *pOutputIoCtx    = 0;
     AVStream        *pStreamOut      = 0;
     AVCodec         *pOutputCodec    = 0;
@@ -3012,11 +3011,10 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1memory
     /**
      *  Output
      */
-    pOutputCtx    = avformat_alloc_context();
-    pOutputFmtCtx = av_guess_format(0, dstfile, 0);
-    pOutputIoCtx  = avio_alloc_context((unsigned char*)av_malloc(65536), 65536, 0, filedst, 0, ff_write_callback, 0);
-    pOutputCtx->oformat = pOutputFmtCtx;
+    pOutputIoCtx  = avio_alloc_context((unsigned char*)av_malloc(65536), 65536, 1, filedst, 0, ff_write_callback, 0);
+    avformat_alloc_output_context2(&pOutputCtx, 0, "h264", 0);
     pOutputCtx->pb      = pOutputIoCtx;
+    pOutputCtx->flags   = AVFMT_FLAG_CUSTOM_IO;
 
     pStreamOut = avformat_new_stream(pOutputCtx, 0);
     pOutputCodecCtx = pStreamOut->codec;
@@ -3062,6 +3060,8 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1memory
             pInputCodecCtx->width, pInputCodecCtx->height, pInputCodecCtx->pix_fmt,
             pOutputCodecCtx->width, pOutputCodecCtx->height, pOutputCodecCtx->pix_fmt,
             SWS_BICUBIC, 0, 0, 0);
+    av_init_packet(pPacketSrc);
+
     avformat_write_header(pOutputCtx, 0);
     while (av_read_frame(pInputCtx, pPacketSrc) >= 0) {
         if (pPacketSrc->stream_index == video_index) {
@@ -3071,26 +3071,33 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1memory
                         (const uint8_t* const*)pFrameSrc->data, pFrameSrc->linesize,
                         0, pOutputCodecCtx->height,
                         pFrameDst->data, pFrameDst->linesize);
+
+                pFrameDst->pict_type = AV_PICTURE_TYPE_NONE;
                 pFrameDst->format = AV_PIX_FMT_YUV420P;
                 pFrameDst->width = pOutputCodecCtx->width;
                 pFrameDst->height = pOutputCodecCtx->height;
-                pFrameDst->pts = pFrameSrc->pts;
-                ret = avcodec_encode_video2(pOutputCodecCtx, pPacketDst, pFrameDst, &got_picture);
-                if (ret > 0 && got_picture) {
+                pFrameDst->pts = av_frame_get_best_effort_timestamp(pFrameSrc);
+
+                pPacketDst->data = 0;
+                pPacketDst->size = 0;
+                av_init_packet(pPacketDst);
+
+                avcodec_encode_video2(pOutputCodecCtx, pPacketDst, pFrameDst, &got_picture);
+                if (got_picture) {
                     pPacketDst->dts = av_rescale_q_rnd(
-                            pPacketSrc->dts,
-                            pInputCodecCtx->time_base,
+                            pPacketDst->dts,
                             pOutputCodecCtx->time_base,
+                            pStreamOut->time_base,
                             (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
                     pPacketDst->pts = av_rescale_q_rnd(
-                            pPacketSrc->pts,
-                            pInputCodecCtx->time_base,
+                            pPacketDst->pts,
                             pOutputCodecCtx->time_base,
+                            pStreamOut->time_base,
                             (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
                     pPacketDst->duration = av_rescale_q(
-                            pPacketSrc->duration,
-                            pInputCodecCtx->time_base,
-                            pOutputCodecCtx->time_base);
+                            pPacketDst->duration,
+                            pOutputCodecCtx->time_base,
+                            pStreamOut->time_base);
                     pPacketDst->pos = -1;
                     pPacketDst->stream_index = pStreamOut->index;
                     av_write_frame(pOutputCtx, pPacketDst);
