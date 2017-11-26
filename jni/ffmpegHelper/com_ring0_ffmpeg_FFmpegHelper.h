@@ -128,6 +128,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1memory
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1memory_1writer
   (JNIEnv *, jclass, jstring, jstring);
 
+JNIEXPORT jstring JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1android_1helloworld
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

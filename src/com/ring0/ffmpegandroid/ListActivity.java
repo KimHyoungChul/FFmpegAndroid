@@ -201,6 +201,10 @@ public class ListActivity extends Activity implements View.OnClickListener {
             intent = new Intent(this, SimpleFFmpegMemoryWriterActivity.class);
             startActivity(intent);
             break;
+        case 25: // simple android activity
+            intent = new Intent(this, AndroidActivity.class);
+            startActivity(intent);
+            break;
         }
     }
 }

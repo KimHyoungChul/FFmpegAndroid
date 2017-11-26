@@ -1026,6 +1026,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1player
     int              got_picture =  0;
     int              video_index = -1;
     uint8_t         *out = 0;
+    av_log_set_callback(ff_log_callback);
     av_register_all();
     avformat_network_init();
     avcodec_register_all();
@@ -3125,4 +3126,86 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1memory
 //    av_frame_free(&pFrameDst);
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jpath, path);
+}
+
+JNIEXPORT jstring JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1android_1helloworld
+  (JNIEnv *env, jclass) {
+    char *configure = (char*)malloc(sizeof(char) * 409600);
+    char *protocols = (char*)malloc(sizeof(char) * 409600);
+    char *formats   = (char*)malloc(sizeof(char) * 409600);
+    char *codecs    = (char*)malloc(sizeof(char) * 409600);
+    char *filters   = (char*)malloc(sizeof(char) * 409600);
+    char *result    = (char*)malloc(409600);
+
+    av_register_all();
+    avcodec_register_all();
+    avdevice_register_all();
+    avfilter_register_all();
+    // configure
+    sprintf(configure, "%s", avcodec_configuration());
+    // protocols
+    struct URLProtocol *proto = 0;
+    struct URLProtocol **p = &proto;
+    avio_enum_protocols((void**)p, 0);
+    while (*p) {
+        sprintf(protocols, "%s\n[In][%s]", protocols, avio_enum_protocols((void**)p, 0));
+    }
+    proto = 0;
+    avio_enum_protocols((void**)p, 1);
+    while (*p) {
+        sprintf(protocols, "%s\n[Out][%s]", protocols, avio_enum_protocols((void**)p, 1));
+    }
+    // formats
+    AVInputFormat  *pInput = av_iformat_next(0);
+    AVOutputFormat *pOutput = av_oformat_next(0);
+    while (pInput) {
+        sprintf(formats, "%s\n[In][%s]", formats, pInput->name);
+        pInput = pInput->next;
+    }
+    while (pOutput) {
+        sprintf(formats, "%s\n[Out][%s]", formats, pOutput->name);
+        pOutput = pOutput->next;
+    }
+    // codec
+    AVCodec *pCodec = av_codec_next(0);
+    while (pCodec) {
+        char *type = "";
+        char *code = "";
+        if (pCodec->decode) {
+            type = "dec";
+        }
+        else {
+            type = "enc";
+        }
+        if (pCodec->type == AVMEDIA_TYPE_VIDEO) {
+            code = "Video";
+        }
+        else if (pCodec->type == AVMEDIA_TYPE_AUDIO) {
+            code = "Audio";
+        }
+        else if (pCodec->type == AVMEDIA_TYPE_SUBTITLE) {
+            code = "Subtitle";
+        }
+        else {
+            code = "other";
+        }
+        sprintf(codecs, "%s\n[%s][%s][%s]", codecs, type, code, pCodec->name);
+        pCodec = pCodec->next;
+    }
+    // filters
+    AVFilter *pFilter = (AVFilter*)avfilter_next(0);
+    while (pFilter) {
+        sprintf(filters, "%s\n[%s]", filters, pFilter->name);
+        pFilter = pFilter->next;
+    }
+    sprintf(result, "configure: %s\nprotocols: %s\nformat: %s\ncodecs: %s\nfilters: %s",
+            configure, protocols, formats, codecs, filters);
+    jstring jresult = env->NewStringUTF(result);
+    free(result);
+    free(configure);
+    free(protocols);
+    free(formats);
+    free(codecs);
+    free(filters);
+    return jresult;
 }

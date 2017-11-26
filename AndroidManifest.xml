@@ -242,6 +242,16 @@
             android:name="com.ring0.ffmpegandroid.SimpleFFmpegMemoryWriterActivity"
             android:label="@string/simple_ffmpeg_memory_writer_name" >
         </activity>
+        <!-- AndroidActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.AndroidActivity"
+            android:label="@string/simple_android_name" >
+        </activity>
+        <!-- SimpleAndroidHelloworldActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleAndroidHelloworldActivity"
+            android:label="@string/simple_android_helloworld_name" >
+        </activity>
     </application>
 
 </manifest>

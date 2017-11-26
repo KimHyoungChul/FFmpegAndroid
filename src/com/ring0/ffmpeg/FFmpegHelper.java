@@ -136,4 +136,6 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg_memory_reader(String srcfile, String path);
     // simple ffmpeg memory writer
     public static native void simple_ffmpeg_memory_writer(String srcfile, String path);
+    // simple android helloworld
+    public static native String simple_android_helloworld();
 }

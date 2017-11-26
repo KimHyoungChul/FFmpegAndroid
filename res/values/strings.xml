@@ -45,6 +45,8 @@
     <string name="simple_ffmpeg_muxer_name">simple ffmpeg muxer</string>
     <string name="simple_ffmpeg_memory_reader_name">simple ffmpeg memory reader</string>
     <string name="simple_ffmpeg_memory_writer_name">simple ffmpeg memory writer</string>
+    <string name="simple_android_name">simple android</string>
+    <string name="simple_android_helloworld_name">simple android helloworld</string>
     
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
@@ -492,6 +494,7 @@
         <item>simple ffmpeg muxer</item>
         <item>simple ffmpeg memory reader</item>
         <item>simple ffmpeg memory writer</item>
+        <item>simple android</item>
     </string-array>
     
     <string-array name="yuv_list">
@@ -559,5 +562,9 @@
         <item>h265</item>
         <item>vp8</item>
         <item>vp9</item>
+    </string-array>
+    
+    <string-array name="simple_android_list">
+        <item>simple android helloworld</item>
     </string-array>
 </resources>
