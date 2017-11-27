@@ -3209,3 +3209,87 @@ JNIEXPORT jstring JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1android_1he
     free(filters);
     return jresult;
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1android_1decoder
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *path = (char*)env->GetStringUTFChars(jpath, 0);
+
+    char *dstfile = (char*)malloc(sizeof(char) * 4096);
+    sprintf(dstfile, "%s/output.yuv", path);
+    FILE *filedst = fopen(dstfile, "wb+");
+
+    AVFormatContext *pFormatCtx  =  0;
+    AVCodecContext  *pCodecCtx   =  0;
+    AVCodec         *pCodec      =  0;
+    AVPacket        *pPacket     =  0;
+    AVFrame         *pFrameSrc   =  0;
+    AVFrame         *pFrameDst   =  0;
+    SwsContext      *pSws        =  0;
+    int              video_index = -1;
+    int              got_picture =  0;
+
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    avformat_network_init();
+    pFormatCtx = avformat_alloc_context();
+    if (avformat_open_input(&pFormatCtx, srcfile, 0, 0) != 0) {
+        return;
+    }
+    if (avformat_find_stream_info(pFormatCtx, 0) < 0) {
+        return;
+    }
+    for (int i = 0; i < pFormatCtx->nb_streams; i++) {
+        if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_index = i;
+            break;
+        }
+    }
+    if (video_index == -1) {
+        return;
+    }
+    pCodecCtx = pFormatCtx->streams[video_index]->codec;
+    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    if (!pCodec) {
+        return;
+    }
+    if (avcodec_open2(pCodecCtx, pCodec, 0) < 0) {
+        return;
+    }
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    pFrameSrc = av_frame_alloc();
+    pFrameDst = av_frame_alloc();
+    int size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height, 1);
+    av_image_fill_arrays(
+            pFrameDst->data, pFrameDst->linesize,
+            (const uint8_t*)av_malloc(size), AV_PIX_FMT_YUV420P,
+            pCodecCtx->width, pCodecCtx->height, 1);
+    pSws = sws_getContext(
+            pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt,
+            pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P,
+            SWS_BICUBIC, 0, 0, 0);
+    while (av_read_frame(pFormatCtx, pPacket) >= 0) {
+        if (pPacket->stream_index == video_index) {
+            int ret = avcodec_decode_video2(pCodecCtx, pFrameSrc, &got_picture, pPacket);
+            if (got_picture) {
+                sws_scale(pSws,
+                        (const uint8_t* const*)pFrameSrc->data, pFrameSrc->linesize,
+                        0, pCodecCtx->height,
+                        pFrameDst->data, pFrameDst->linesize);
+                fwrite(pFrameDst->data[0], 1,  pCodecCtx->width * pCodecCtx->height,      filedst);
+                fwrite(pFrameDst->data[1], 1, (pCodecCtx->width * pCodecCtx->height) / 4, filedst);
+                fwrite(pFrameDst->data[2], 1, (pCodecCtx->width * pCodecCtx->height) / 4, filedst);
+            }
+        }
+        av_free_packet(pPacket);
+    }
+    free(dstfile);
+    fclose(filedst);
+    avcodec_close(pCodecCtx);
+    sws_freeContext(pSws);
+    avformat_close_input(&pFormatCtx);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jpath, path);
+}

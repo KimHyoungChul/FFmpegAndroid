@@ -138,4 +138,6 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg_memory_writer(String srcfile, String path);
     // simple android helloworld
     public static native String simple_android_helloworld();
+    // simple android decoder
+    public static native void simple_android_decoder(String srcfile, String path);
 }

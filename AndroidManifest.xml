@@ -252,6 +252,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleAndroidHelloworldActivity"
             android:label="@string/simple_android_helloworld_name" >
         </activity>
+        <!-- SimpleAndroidDecoderActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleAndroidDecoderActivity"
+            android:label="@string/simple_android_decoder_name" >
+        </activity>
     </application>
 
 </manifest>
