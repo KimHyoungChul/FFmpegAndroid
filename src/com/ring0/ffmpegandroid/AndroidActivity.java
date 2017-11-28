@@ -105,8 +105,12 @@ public class AndroidActivity extends Activity implements View.OnClickListener {
             intent = new Intent(this, SimpleAndroidHelloworldActivity.class);
             startActivity(intent);
             break;
-        case 1: //simple android decoder
+        case 1: // simple android decoder
             intent = new Intent(this, SimpleAndroidDecoderActivity.class);
+            startActivity(intent);
+            break;
+        case 2: // simple android ffmpeg program
+            intent = new Intent(this, SimpleAndroidFFmpegProgramActivity.class);
             startActivity(intent);
             break;
         }

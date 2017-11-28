@@ -48,6 +48,7 @@
     <string name="simple_android_name">simple android</string>
     <string name="simple_android_helloworld_name">simple android helloworld</string>
     <string name="simple_android_decoder_name">simple android decoder</string>
+    <string name="simple_ffmpeg_program_name">simple ffmpeg program name</string>
     
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
@@ -476,6 +477,10 @@
     <string name="simple_android_decoder_start">开始</string>
     <string name="simple_android_decoder_toast_filename">请输入视频文件</string>
     <string name="simple_android_decoder_toast_filepath">请输入分离后保存的路径</string>
+    <!-- SimpleAndroidFFmpegProgramActivity -->
+    <string name="simple_android_ffmpeg_program_command">这里填入命令行</string>
+    <string name="simple_android_ffmpeg_program_start">开始</string>
+    <string name="simple_android_ffmpeg_program_toast_command">请输入命令行</string>
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
         <item>ffmpeg 解码为 pcm</item>
@@ -575,5 +580,6 @@
     <string-array name="simple_android_list">
         <item>simple android helloworld</item>
         <item>simple android decoder</item>
+        <item>simple ffmpeg program</item>
     </string-array>
 </resources>

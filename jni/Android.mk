@@ -23,11 +23,18 @@ include $(BUILD_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE            :=  ffmpegHelper
 LOCAL_SRC_FILES         :=  ffmpegHelper/com_ring0_ffmpeg_FFmpegHelper.cpp \
-                            ffmpegHelper/yuv/simple_yuv.cpp
-LOCAL_C_INCLUDES        :=  $(LOCAL_PATH)/ffmpeg-3.3.4/android/$(TARGET_ARCH_ABI)/include \
-                            $(LOCAL_PATH)/ffmpegHelper/yuv
+                            ffmpegHelper/yuv/simple_yuv.cpp \
+                            ffmpegHelper/ffmpeg/ffmpeg.c \
+                            ffmpegHelper/ffmpeg/ffmpeg_opt.c \
+                            ffmpegHelper/ffmpeg/ffmpeg_filter.c \
+                            ffmpegHelper/ffmpeg/cmdutils.c
+LOCAL_C_INCLUDES        :=  $(LOCAL_PATH)/ffmpegHelper/ffmpeg                             \
+                            $(LOCAL_PATH)/ffmpegHelper/yuv                                \
+                            $(LOCAL_PATH)/ffmpeg-3.3.4/android/$(TARGET_ARCH_ABI)/include \
+                            $(LOCAL_PATH)/ffmpeg-3.3.4
 LOCAL_LDLIBS            +=  -L$(SYSROOT)/usr/lib -llog -lm -lz -lGLESv2 -landroid -lOpenSLES -Wl,-s
 LOCAL_CFLAGS            +=  -fvisibility=hidden
+LOCAL_ARM_MODE          :=  arm
 LOCAL_SHARED_LIBRARIES  :=  ffmpeg
 include $(BUILD_SHARED_LIBRARY)
 ###############################################################################

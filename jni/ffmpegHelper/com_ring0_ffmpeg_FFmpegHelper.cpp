@@ -11,6 +11,7 @@
 #include <SLES/OpenSLES_Android.h>
 
 extern "C" {
+#include "ffmpeg.h"
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libavcodec/jni.h>
@@ -3292,4 +3293,33 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1android_1decod
 
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jpath, path);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg
+  (JNIEnv *env, jclass, jint argc, jobjectArray argv) {
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    avformat_network_init();
+    avdevice_register_all();
+    avfilter_register_all();
+
+    char **args = (char**)malloc(sizeof(char*) * argc);
+    for (int i = 0; i < argc; i++) {
+        jstring jcmd = (jstring)env->GetObjectArrayElement(argv, i);
+        char   *cmd  = (char*)env->GetStringUTFChars(jcmd, 0);
+
+        char *str = (char*)malloc(sizeof(char) * 4096);
+        sprintf(str, "%s", cmd);
+        args[i] = str;
+
+        env->ReleaseStringUTFChars(jcmd, cmd);
+    }
+
+    ffmpegmain(argc, args);
+    for (int i = 0; i < argc; i++) {
+        free(args[i]);
+        args[i] = 0;
+    }
+    free(args);
 }

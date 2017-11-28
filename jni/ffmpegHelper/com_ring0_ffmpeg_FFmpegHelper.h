@@ -134,6 +134,9 @@ JNIEXPORT jstring JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1android_1he
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1android_1decoder
   (JNIEnv *, jclass, jstring, jstring);
 
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg
+  (JNIEnv *, jclass, jint, jobjectArray);
+
 #ifdef __cplusplus
 }
 #endif
