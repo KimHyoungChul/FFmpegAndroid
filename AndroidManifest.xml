@@ -260,7 +260,12 @@
         <!-- SimpleAndroidFFmpegProgramActivity -->
         <activity
             android:name="com.ring0.ffmpegandroid.SimpleAndroidFFmpegProgramActivity"
-            android:label="@string/simple_ffmpeg_program_name" >
+            android:label="@string/simple_android_program_name" >
+        </activity>
+        <!-- SimpleAndroidPlayerActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleAndroidPlayerActivity"
+            android:label="@string/simple_android_player_name" >
         </activity>
     </application>
 

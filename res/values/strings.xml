@@ -48,7 +48,8 @@
     <string name="simple_android_name">simple android</string>
     <string name="simple_android_helloworld_name">simple android helloworld</string>
     <string name="simple_android_decoder_name">simple android decoder</string>
-    <string name="simple_ffmpeg_program_name">simple ffmpeg program name</string>
+    <string name="simple_android_program_name">simple ffmpeg program</string>
+    <string name="simple_android_player_name">simple android player</string>
     
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
@@ -481,6 +482,14 @@
     <string name="simple_android_ffmpeg_program_command">这里填入命令行</string>
     <string name="simple_android_ffmpeg_program_start">开始</string>
     <string name="simple_android_ffmpeg_program_toast_command">请输入命令行</string>
+    <!-- SimpleAndroidPlayerActivity -->
+    <string name="simple_android_player_filename">文件名</string>
+    <string name="simple_android_player_filehint">请输入视频文件</string>
+    <string name="simple_android_player_set">设置</string>
+    <string name="simple_android_player_start">播放</string>
+    <string name="simple_android_player_pause">暂停</string>
+    <string name="simple_android_player_stop">停止</string>
+    <string name="simple_android_player_toast_filename">请数据视频文件</string>
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
         <item>ffmpeg 解码为 pcm</item>
@@ -580,6 +589,7 @@
     <string-array name="simple_android_list">
         <item>simple android helloworld</item>
         <item>simple android decoder</item>
-        <item>simple ffmpeg program</item>
+        <item>simple android program</item>
+        <item>simple android player</item>
     </string-array>
 </resources>

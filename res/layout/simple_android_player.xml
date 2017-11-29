@@ -1,0 +1,49 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llDecoderPcmMain"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+    
+    <VideoView
+        android:id="@+id/vVideo"
+        android:layout_width="fill_parent"
+        android:layout_height="200dp" />
+    
+    <LinearLayout
+        android:id="@+id/llFilenameMain"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tvFilename"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etFilename"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+    
+    <Button
+        android:id="@+id/btSet"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp" />
+    
+    <Button
+        android:id="@+id/btStart"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp" />
+    
+    <Button
+        android:id="@+id/btPause"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp" />
+    
+    <Button
+        android:id="@+id/btStop"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp" />
+</LinearLayout>
