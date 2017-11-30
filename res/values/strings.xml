@@ -50,6 +50,7 @@
     <string name="simple_android_decoder_name">simple android decoder</string>
     <string name="simple_android_program_name">simple ffmpeg program</string>
     <string name="simple_android_player_name">simple android player</string>
+    <string name="simple_ffmpeg_pusher_name">simple ffmpeg pusher</string>
     
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
@@ -490,6 +491,15 @@
     <string name="simple_android_player_pause">暂停</string>
     <string name="simple_android_player_stop">停止</string>
     <string name="simple_android_player_toast_filename">请数据视频文件</string>
+    <!-- SimpleFFmpegPusherActivity -->
+    <string name="simple_ffmpeg_pusher_filename">直播流</string>
+    <string name="simple_ffmpeg_pusher_filepath">文件</string>
+    <string name="simple_ffmpeg_pusher_filename_hint">这里填入要推送的直播流</string>
+    <string name="simple_ffmpeg_pusher_filepath_hint">这里填入要推送的文件</string>
+    <string name="simple_ffmpeg_pusher_start">开始</string>
+    <string name="simple_ffmpeg_pusher_toast_filename">这里填入要推送的直播流</string>
+    <string name="simple_ffmpeg_pusher_toast_filepath">这里填入要推送的文件</string>
+    
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
         <item>ffmpeg 解码为 pcm</item>
@@ -517,6 +527,7 @@
         <item>simple ffmpeg memory reader</item>
         <item>simple ffmpeg memory writer</item>
         <item>simple android</item>
+        <item>simple ffmpeg pusher</item>
     </string-array>
     
     <string-array name="yuv_list">

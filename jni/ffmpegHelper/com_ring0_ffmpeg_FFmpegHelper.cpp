@@ -25,6 +25,7 @@ extern "C" {
 #include <libavutil/pixfmt.h>
 #include <libavutil/samplefmt.h>
 #include <libavutil/opt.h>
+#include <libavutil/time.h>
 #include <libavdevice/avdevice.h>
 }
 #include <android/log.h>
@@ -3322,4 +3323,111 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg
         args[i] = 0;
     }
     free(args);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1pusher
+  (JNIEnv *env, jclass, jstring jurl, jstring jsrcfile) {
+    char *url     = (char*)env->GetStringUTFChars(jurl, 0);
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+
+    AVFormatContext *pInputCtx       =  0;
+    AVFormatContext *pOutputCtx      =  0;
+    AVOutputFormat  *pOutputFmtCtx   =  0;
+    AVCodecContext  *pCodecCtx       =  0;
+    AVPacket        *pPacket         =  0;
+    AVStream        *pInStream       =  0;
+    AVStream        *pOutStream      =  0;
+
+    int              video_index_in  = -1;
+    int              video_index_out = -1;
+    int              got_picture     =  0;
+    int              frame_index     =  0;
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avformat_network_init();
+    avcodec_register_all();
+    pInputCtx = avformat_alloc_context();
+    avformat_alloc_output_context2(&pOutputCtx, 0, "flv", 0);
+    pOutputFmtCtx = pOutputCtx->oformat;
+    if (avio_open(&pOutputCtx->pb, url, AVIO_FLAG_READ_WRITE) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avio_open error");
+        return;
+    }
+    if (avformat_open_input(&pInputCtx, srcfile, 0, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pInputCtx, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
+        return;
+    }
+    for (int i = 0; i < pInputCtx->nb_streams; i++) {
+        if (pInputCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_index_in = i;
+            break;
+        }
+    }
+    if (video_index_in == -1) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found video stream");
+        return;
+    }
+    pInStream = pInputCtx->streams[video_index_in];
+    pOutStream = avformat_new_stream(pOutputCtx, pInStream->codec->codec);
+    if (avcodec_copy_context(pOutStream->codec, pInStream->codec) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_copy_context error");
+        return;
+    }
+    pOutStream->codec->codec_tag = 0;
+    video_index_out = pOutStream->index;
+    if (pOutputFmtCtx->flags & AVFMT_GLOBALHEADER) {
+        pOutStream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+    }
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_init_packet(pPacket);
+    avformat_write_header(pOutputCtx, 0);
+    while (av_read_frame(pInputCtx, pPacket) >= 0) {
+        if (pPacket->stream_index == video_index_in) {
+            if (pPacket->pts == AV_NOPTS_VALUE) {
+                AVRational time_base = pInputCtx->streams[video_index_in]->time_base;
+                int64_t    duration  = (double)AV_TIME_BASE / av_q2d(pInputCtx->streams[video_index_in]->r_frame_rate);
+                pPacket->pts = (frame_index * duration) / (double)(av_q2d(time_base) * AV_TIME_BASE);
+                pPacket->dts = pPacket->pts;
+                pPacket->duration = double(duration) / (double)(av_q2d(time_base) * AV_TIME_BASE);
+            }
+            int64_t start_time = av_gettime();
+            AVRational time_base  = pInputCtx->streams[video_index_in]->time_base;
+            AVRational time_baseq = {1, AV_TIME_BASE};
+            int64_t pts_time = av_rescale_q(pPacket->dts, time_base, time_baseq);
+            int64_t now_time = av_gettime() - start_time;
+            if (pts_time > now_time) {
+                av_usleep(pts_time - now_time);
+            }
+            frame_index++;
+            pInStream  = pInputCtx->streams[video_index_in];
+            pOutStream = pOutputCtx->streams[video_index_out];
+            pPacket->pts = av_rescale_q_rnd(
+                    pPacket->pts,
+                    pInStream->time_base,
+                    pOutStream->time_base,
+                    (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pPacket->dts = av_rescale_q_rnd(
+                    pPacket->dts,
+                    pInStream->time_base,
+                    pOutStream->time_base,
+                    (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pPacket->duration = av_rescale_q(
+                    pPacket->duration,
+                    pInStream->time_base,
+                    pOutStream->time_base);
+            pPacket->pos = -1;
+            pPacket->stream_index = video_index_out;
+            av_interleaved_write_frame(pOutputCtx, pPacket);
+        }
+        av_free_packet(pPacket);
+    }
+    av_write_trailer(pOutputCtx);
+    avformat_close_input(&pInputCtx);
+    avformat_free_context(pOutputCtx);
+    env->ReleaseStringUTFChars(jurl, url);
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
 }

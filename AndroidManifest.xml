@@ -267,6 +267,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleAndroidPlayerActivity"
             android:label="@string/simple_android_player_name" >
         </activity>
+        <!-- SimpleFFmpegPusherActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleFFmpegPusherActivity"
+            android:label="@string/simple_ffmpeg_pusher_name" >
+        </activity>
     </application>
 
 </manifest>

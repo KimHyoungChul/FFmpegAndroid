@@ -142,4 +142,6 @@ public class FFmpegHelper {
     public static native void simple_android_decoder(String srcfile, String path);
     // simple ffmpeg
     public static native void simple_ffmpeg(int argc, String argv[]);
+    // simple ffmpeg pusher
+    public static native void simple_ffmpeg_pusher(String url, String srcfile);
 }
