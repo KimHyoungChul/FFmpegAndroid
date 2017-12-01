@@ -144,4 +144,6 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg(int argc, String argv[]);
     // simple ffmpeg pusher
     public static native void simple_ffmpeg_pusher(String url, String srcfile);
+    // simple ffmpeg puller
+    public static native void simple_ffmpeg_puller(String url, String srcfile);
 }

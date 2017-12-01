@@ -3431,3 +3431,86 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1pusher
     env->ReleaseStringUTFChars(jurl, url);
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
 }
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1puller
+  (JNIEnv *env, jclass, jstring jurl, jstring jsrcfile) {
+    char *url     = (char*)env->GetStringUTFChars(jurl, 0);
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+
+    AVFormatContext          *pInputCtx       =  0;
+    AVFormatContext          *pOutputCtx      =  0;
+    AVOutputFormat           *pOutputFmtCtx   =  0;
+    AVPacket                 *pPacket         =  0;
+    AVBitStreamFilterContext *pBsf            =  0;
+    AVStream                 *pInStream       =  0;
+    AVStream                 *pOutStream      =  0;
+
+    int                       video_index_in  = -1;
+    int                       video_index_out = -1;
+    int                       got_picture     =  0;
+
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    avformat_network_init();
+    pInputCtx = avformat_alloc_context();
+    pOutputCtx = avformat_alloc_context();
+    avformat_alloc_output_context2(&pOutputCtx, 0, "flv", srcfile);
+    pOutputFmtCtx = pOutputCtx->oformat;
+    if (avio_open(&pOutputCtx->pb, srcfile, AVIO_FLAG_READ_WRITE) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avio_open error");
+        return;
+    }
+    if (avformat_open_input(&pInputCtx, url, 0, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pInputCtx, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
+        return;
+    }
+    for (int i = 0; i < pInputCtx->nb_streams; i++) {
+        if (pInputCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_index_in = i;
+            break;
+        }
+    }
+    if (video_index_in == -1) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found video stream");
+        return;
+    }
+    pInStream = pInputCtx->streams[video_index_in];
+    pOutStream = avformat_new_stream(pOutputCtx, pInStream->codec->codec);
+    video_index_out = pOutStream->index;
+    if (avcodec_copy_context(pOutStream->codec, pInStream->codec) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_copy_context error");
+        return;
+    }
+    pOutStream->codec->codec_tag = 0;
+    if (pOutputFmtCtx->flags & AVFMT_GLOBALHEADER) {
+        pOutStream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+    }
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    pBsf = av_bitstream_filter_init("h264_mp4toannexb");
+    avformat_write_header(pOutputCtx, 0);
+    while (av_read_frame(pInputCtx, pPacket) >= 0) {
+        if (pPacket->stream_index == video_index_in) {
+            av_bitstream_filter_filter(pBsf, pOutStream->codec, 0, &pPacket->data, &pPacket->size, pPacket->data, pPacket->size, 0);
+            pPacket->pts = av_rescale_q_rnd(pPacket->pts, pInStream->time_base, pOutStream->time_base, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pPacket->dts = av_rescale_q_rnd(pPacket->dts, pInStream->time_base, pOutStream->time_base, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pPacket->duration = av_rescale_q(pPacket->duration, pInStream->time_base, pOutStream->time_base);
+            pPacket->pos = -1;
+            pPacket->stream_index = video_index_out;
+            av_interleaved_write_frame(pOutputCtx, pPacket);
+        }
+        av_free_packet(pPacket);
+    }
+    av_write_trailer(pOutputCtx);
+
+    avio_close(pOutputCtx->pb);
+    av_bitstream_filter_close(pBsf);
+    avformat_close_input(&pInputCtx);
+    avformat_free_context(pOutputCtx);
+    env->ReleaseStringUTFChars(jurl, url);
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+}
