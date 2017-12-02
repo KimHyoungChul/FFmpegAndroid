@@ -1,0 +1,29 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llMain"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+    <!-- 文件名 -->
+    <LinearLayout
+        android:id="@+id/llFilename"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/tvFilename"
+            android:layout_width="80dp"
+            android:layout_height="fill_parent"
+            android:gravity="center" />
+        <EditText
+            android:id="@+id/etFilename"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+    
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp" />
+</LinearLayout>

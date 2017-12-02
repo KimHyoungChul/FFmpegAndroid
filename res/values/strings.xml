@@ -52,6 +52,8 @@
     <string name="simple_android_player_name">simple android player</string>
     <string name="simple_ffmpeg_pusher_name">simple ffmpeg pusher</string>
     <string name="simple_ffmpeg_puller_name">simple ffmpeg puller</string>
+    <string name="simple_ffmpeg_audio_decoder_name">simple ffmpeg audio decoder</string>
+    <string name="simple_ffmpeg_audio_pcm_player_name">simple ffmpeg audio pcm player</string>
     
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
@@ -508,6 +510,19 @@
     <string name="simple_ffmpeg_puller_start">开始</string>
     <string name="simple_ffmpeg_puller_toast_filename">这里填入要推送的直播流</string>
     <string name="simple_ffmpeg_puller_toast_filepath">这里填入要保存的文件</string>
+    <!-- SimpleFFmpegAudioPlayerActivity -->
+    <string name="simple_ffmpeg_audio_player2_filename">文件名</string>
+    <string name="simple_ffmpeg_audio_player2_filepath">保存路径</string>
+    <string name="simple_ffmpeg_audio_player2_filename_hint">这里填入要分离的 pcm 文件</string>
+    <string name="simple_ffmpeg_audio_player2_filepath_hint">这里填入分离后保存的路径</string>
+    <string name="simple_ffmpeg_audio_player2_start">开始</string>
+    <string name="simple_ffmpeg_audio_player2_toast_filename">请输入要分离 pcm 文件</string>
+    <string name="simple_ffmpeg_audio_player2_toast_filepath">请输入分离后保存的路径</string>
+    <!-- SimpleFFmpegPcmPlayerActivity -->
+    <string name="simple_ffmpeg_pcm_player_filename">文件名</string>
+    <string name="simple_ffmpeg_pcm_player_filename_hint">这里填入要播放的 pcm 文件</string>
+    <string name="simple_ffmpeg_pcm_player_start">开始</string>
+    <string name="simple_ffmpeg_pcm_player_toast_filename">请输入要播放 pcm 文件</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -538,6 +553,8 @@
         <item>simple android</item>
         <item>simple ffmpeg pusher</item>
         <item>simple ffmpeg puller</item>
+        <item>simple ffmpeg audio decoder</item>
+        <item>simple ffmpeg audio pcm player</item>
     </string-array>
     
     <string-array name="yuv_list">

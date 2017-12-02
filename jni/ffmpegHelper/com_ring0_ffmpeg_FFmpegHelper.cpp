@@ -3347,6 +3347,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1pusher
     avformat_network_init();
     avcodec_register_all();
     pInputCtx = avformat_alloc_context();
+    pOutputCtx = avformat_alloc_context();
     avformat_alloc_output_context2(&pOutputCtx, 0, "flv", 0);
     pOutputFmtCtx = pOutputCtx->oformat;
     if (avio_open(&pOutputCtx->pb, url, AVIO_FLAG_READ_WRITE) < 0) {
@@ -3399,9 +3400,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1pusher
             AVRational time_baseq = {1, AV_TIME_BASE};
             int64_t pts_time = av_rescale_q(pPacket->dts, time_base, time_baseq);
             int64_t now_time = av_gettime() - start_time;
-            if (pts_time > now_time) {
-                av_usleep(pts_time - now_time);
-            }
+//            if (pts_time > now_time) {
+//                av_usleep(pts_time - now_time);
+//            }
             frame_index++;
             pInStream  = pInputCtx->streams[video_index_in];
             pOutStream = pOutputCtx->streams[video_index_out];
@@ -3420,8 +3421,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1pusher
                     pInStream->time_base,
                     pOutStream->time_base);
             pPacket->pos = -1;
-            pPacket->stream_index = video_index_out;
-            av_interleaved_write_frame(pOutputCtx, pPacket);
+            //pPacket->stream_index = video_index_out;
+            //av_interleaved_write_frame(pOutputCtx, pPacket);
+            av_write_frame(pOutputCtx, pPacket);
         }
         av_free_packet(pPacket);
     }
@@ -3513,4 +3515,136 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1puller
     avformat_free_context(pOutputCtx);
     env->ReleaseStringUTFChars(jurl, url);
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_1decoder
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *path    = (char*)env->GetStringUTFChars(jpath, 0);
+    char *dstfile = (char*)malloc(sizeof(char) * 1024);
+    sprintf(dstfile, "%s/pcm.pcm", path);
+    FILE *filepcm = fopen(dstfile, "wb+");
+
+    AVFormatContext *pInputCtx   =  0;
+    AVCodecContext  *pCodecCtx   =  0;
+    AVCodec         *pCodec      =  0;
+    AVPacket        *pPacket     =  0;
+    AVFrame         *pFrameSrc   =  0;
+    SwrContext      *pSwr        =  0;
+    int              audio_index = -1;
+    int              got_picture =  0;
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    avformat_network_init();
+    pInputCtx = avformat_alloc_context();
+    if (avformat_open_input(&pInputCtx, srcfile, 0, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pInputCtx, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
+        return;
+    }
+    for (int i = 0; i < pInputCtx->nb_streams; i++) {
+        if (pInputCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audio_index = i;
+            break;
+        }
+    }
+    if (audio_index == -1) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found audio stream info");
+        return;
+    }
+    pCodecCtx = pInputCtx->streams[audio_index]->codec;
+    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    if (!pCodec) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_find_decoder error");
+        return;
+    }
+    if (avcodec_open2(pCodecCtx, pCodec, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_open2 error");
+        return;
+    }
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    pFrameSrc = av_frame_alloc();
+    pSwr = swr_alloc();
+    av_opt_set_int(pSwr, "in_channel_layout",  pCodecCtx->channel_layout, 0);
+    av_opt_set_int(pSwr, "in_sample_rate",     pCodecCtx->sample_rate,    0);
+    av_opt_set_int(pSwr, "in_sample_fmt",      pCodecCtx->sample_fmt,     0);
+    av_opt_set_int(pSwr, "out_channel_layout", pCodecCtx->channel_layout, 0);
+    av_opt_set_int(pSwr, "out_sample_rate",    pCodecCtx->sample_rate,    0);
+    av_opt_set_int(pSwr, "out_sample_fmt",     pCodecCtx->sample_fmt,     0);
+    swr_init(pSwr);
+    while (av_read_frame(pInputCtx, pPacket) >= 0) {
+        if (pPacket->stream_index == audio_index) {
+            avcodec_decode_audio4(pCodecCtx, pFrameSrc, &got_picture, pPacket);
+            if (got_picture) {
+                int size = av_samples_get_buffer_size(pFrameSrc->linesize, pCodecCtx->channels, pFrameSrc->nb_samples, pCodecCtx->sample_fmt, 1);
+                char *buff = (char*)malloc(size);
+                swr_convert(pSwr, (uint8_t**)buff, pFrameSrc->nb_samples, (const uint8_t**)pFrameSrc->data, pFrameSrc->nb_samples);
+                fwrite(buff, 1, size, filepcm);
+                free(buff);
+            }
+        }
+        av_free_packet(pPacket);
+    }
+
+    free(dstfile);
+    fclose(filepcm);
+    avcodec_close(pCodecCtx);
+    avformat_close_input(&pInputCtx);
+    swr_free(&pSwr);
+
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jpath, path);
+}
+
+void android_pcm_callback(SLAndroidSimpleBufferQueueItf queue, void *data) {
+    FILE *f = (FILE*)data;
+    if (f && !feof(f)) {
+        int size = av_samples_get_buffer_size(0, 2, 44100, AV_SAMPLE_FMT_U8, 1);
+        char *buff = (char*)malloc(sizeof(char) * size);
+        fread(buff, size, 1, f);
+        (*queue)->Enqueue(queue, buff, size);
+    }
+    else {
+        fclose(f);
+    }
+    return;
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_1pcm_1player
+  (JNIEnv *env, jclass, jstring jpcmfile) {
+    char *pcmfile = (char*)env->GetStringUTFChars(jpcmfile, 0);
+    FILE *file = fopen(pcmfile, "rb+");
+
+    SLDataLocator_AndroidSimpleBufferQueue sl_queue = {
+            SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
+    SLDataFormat_PCM sl_pcm = {
+            SL_DATAFORMAT_PCM,
+            2,                            // numChannels
+            44100 * 1000,                 // samplesPerSec
+            SL_PCMSAMPLEFORMAT_FIXED_8,   // bitsPerSample
+            SL_PCMSAMPLEFORMAT_FIXED_8,   // containerSize
+            SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT, // channelMask
+            SL_BYTEORDER_LITTLEENDIAN     // endianness
+    };
+    SLDataSource            sl_source = {&sl_queue, &sl_pcm};
+    SLDataLocator_OutputMix sl_mix    = {SL_DATALOCATOR_OUTPUTMIX, g_sl_mixobject};
+    SLDataSink              sl_sink   = {&sl_mix, 0};
+
+    const SLInterfaceID ids[3] = {SL_IID_BUFFERQUEUE, SL_IID_EFFECTSEND, SL_IID_VOLUME};
+    const SLboolean     req[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+
+    (*g_sl_engine)->CreateAudioPlayer(g_sl_engine, &l_sl_player,  &sl_source, &sl_sink, 3, ids, req);
+    (*l_sl_player)->Realize(        l_sl_player, SL_BOOLEAN_FALSE);
+    (*l_sl_player)->GetInterface(   l_sl_player, SL_IID_PLAY,                 &l_sl_play);
+    (*l_sl_player)->GetInterface(   l_sl_player, SL_IID_BUFFERQUEUE,          &l_sl_queue);
+    (*l_sl_player)->GetInterface(   l_sl_player, SL_IID_EFFECTSEND,           &l_sl_effect);
+    (*l_sl_player)->GetInterface(   l_sl_player, SL_IID_VOLUME,               &l_sl_volume);
+
+    (*l_sl_queue)->RegisterCallback(l_sl_queue,  android_pcm_callback, file);
+    (*l_sl_play)->SetPlayState(     l_sl_play,   SL_PLAYSTATE_PLAYING);
+    android_pcm_callback(l_sl_queue, file);
 }

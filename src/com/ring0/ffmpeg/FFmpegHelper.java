@@ -146,4 +146,8 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg_pusher(String url, String srcfile);
     // simple ffmpeg puller
     public static native void simple_ffmpeg_puller(String url, String srcfile);
+    // simple ffmpeg audio decoder
+    public static native void simple_ffmpeg_audio_decoder(String srcfile, String path);
+    // simple ffmpeg audio player
+    public static native void simple_ffmpeg_audio_pcm_player(String pcmfile);
 }
