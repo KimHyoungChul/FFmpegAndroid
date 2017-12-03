@@ -54,6 +54,7 @@
     <string name="simple_ffmpeg_puller_name">simple ffmpeg puller</string>
     <string name="simple_ffmpeg_audio_decoder_name">simple ffmpeg audio decoder</string>
     <string name="simple_ffmpeg_audio_pcm_player_name">simple ffmpeg audio pcm player</string>
+    <string name="simple_ffmpeg_video_decoder_name">simple ffmpeg video decoder</string>
     
     <!-- DecoderYuvActivity -->
     <string name="decoder_yuv_filename">文件名</string>
@@ -523,6 +524,14 @@
     <string name="simple_ffmpeg_pcm_player_filename_hint">这里填入要播放的 pcm 文件</string>
     <string name="simple_ffmpeg_pcm_player_start">开始</string>
     <string name="simple_ffmpeg_pcm_player_toast_filename">请输入要播放 pcm 文件</string>
+    <!-- SimpleFFmpegVideoDecoderActivity -->
+    <string name="simple_ffmpeg_video_decoder_filename">文件名</string>
+    <string name="simple_ffmpeg_video_decoder_filepath">保存路径</string>
+    <string name="simple_ffmpeg_video_decoder_filename_hint">这里填入要分离的 pcm 文件</string>
+    <string name="simple_ffmpeg_video_decoder_filepath_hint">这里填入分离后保存的路径</string>
+    <string name="simple_ffmpeg_video_decoder_start">开始</string>
+    <string name="simple_ffmpeg_video_decoder_toast_filename">请输入要分离 pcm 文件</string>
+    <string name="simple_ffmpeg_video_decoder_toast_filepath">请输入分离后保存的路径</string>
     
     <string-array name="list">
         <item>ffmpeg 解码为 yuv</item>
@@ -555,6 +564,7 @@
         <item>simple ffmpeg puller</item>
         <item>simple ffmpeg audio decoder</item>
         <item>simple ffmpeg audio pcm player</item>
+        <item>simple ffmpeg video decoder</item>
     </string-array>
     
     <string-array name="yuv_list">

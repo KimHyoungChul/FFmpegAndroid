@@ -3530,6 +3530,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_
     AVCodec         *pCodec      =  0;
     AVPacket        *pPacket     =  0;
     AVFrame         *pFrameSrc   =  0;
+    AVFrame         *pFrameDst   =  0;
     SwrContext      *pSwr        =  0;
     int              audio_index = -1;
     int              got_picture =  0;
@@ -3568,23 +3569,23 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_
     }
     pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
     pFrameSrc = av_frame_alloc();
+    pFrameDst = av_frame_alloc();
     pSwr = swr_alloc();
     av_opt_set_int(pSwr, "in_channel_layout",  pCodecCtx->channel_layout, 0);
     av_opt_set_int(pSwr, "in_sample_rate",     pCodecCtx->sample_rate,    0);
     av_opt_set_int(pSwr, "in_sample_fmt",      pCodecCtx->sample_fmt,     0);
     av_opt_set_int(pSwr, "out_channel_layout", pCodecCtx->channel_layout, 0);
-    av_opt_set_int(pSwr, "out_sample_rate",    pCodecCtx->sample_rate,    0);
-    av_opt_set_int(pSwr, "out_sample_fmt",     pCodecCtx->sample_fmt,     0);
+    av_opt_set_int(pSwr, "out_sample_rate",    44100,                     0);
+    av_opt_set_int(pSwr, "out_sample_fmt",     AV_SAMPLE_FMT_U8,          0);
     swr_init(pSwr);
     while (av_read_frame(pInputCtx, pPacket) >= 0) {
         if (pPacket->stream_index == audio_index) {
             avcodec_decode_audio4(pCodecCtx, pFrameSrc, &got_picture, pPacket);
             if (got_picture) {
-                int size = av_samples_get_buffer_size(pFrameSrc->linesize, pCodecCtx->channels, pFrameSrc->nb_samples, pCodecCtx->sample_fmt, 1);
-                char *buff = (char*)malloc(size);
-                swr_convert(pSwr, (uint8_t**)buff, pFrameSrc->nb_samples, (const uint8_t**)pFrameSrc->data, pFrameSrc->nb_samples);
-                fwrite(buff, 1, size, filepcm);
-                free(buff);
+                av_samples_alloc(pFrameDst->data, pFrameDst->linesize, pFrameSrc->channels, pFrameSrc->nb_samples, AV_SAMPLE_FMT_U8, 1);
+                swr_convert(pSwr, pFrameDst->data, pFrameSrc->nb_samples, (const uint8_t**)pFrameSrc->data, pFrameSrc->nb_samples);
+                fwrite(pFrameDst->data[0], 1, 44100, filepcm);
+                av_frame_unref(pFrameDst);
             }
         }
         av_free_packet(pPacket);
@@ -3605,7 +3606,7 @@ void android_pcm_callback(SLAndroidSimpleBufferQueueItf queue, void *data) {
     if (f && !feof(f)) {
         int size = av_samples_get_buffer_size(0, 2, 44100, AV_SAMPLE_FMT_U8, 1);
         char *buff = (char*)malloc(sizeof(char) * size);
-        fread(buff, size, 1, f);
+        fread(buff, 44100, 1, f);
         (*queue)->Enqueue(queue, buff, size);
     }
     else {
@@ -3647,4 +3648,92 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_
     (*l_sl_queue)->RegisterCallback(l_sl_queue,  android_pcm_callback, file);
     (*l_sl_play)->SetPlayState(     l_sl_play,   SL_PLAYSTATE_PLAYING);
     android_pcm_callback(l_sl_queue, file);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1video_1decoder
+  (JNIEnv *env, jclass, jstring jsrcfile, jstring jpath) {
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    char *path    = (char*)env->GetStringUTFChars(jpath, 0);
+    char *dstfile = (char*)malloc(sizeof(char) * 1024);
+    sprintf(dstfile, "%s/yuv.yuv", path);
+    FILE *filedst = fopen(dstfile, "wb+");
+
+    AVFormatContext          *pInputCtx   =  0;
+    AVCodecContext           *pCodecCtx   =  0;
+    AVCodec                  *pCodec      =  0;
+    AVPacket                 *pPacket     =  0;
+    AVFrame                  *pFrameSrc   =  0;
+    AVFrame                  *pFrameDst   =  0;
+    AVBitStreamFilterContext *pBsf        =  0;
+    SwsContext               *pSws        =  0;
+    int                       video_index = -1;
+    int                       got_picture =  0;
+
+    av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avcodec_register_all();
+    avformat_network_init();
+    pInputCtx = avformat_alloc_context();
+    if (avformat_open_input(&pInputCtx, srcfile, 0, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pInputCtx, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
+        return;
+    }
+    for (int i = 0; i < pInputCtx->nb_streams; i++) {
+        if (pInputCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_index = i;
+            break;
+        }
+    }
+    if (video_index == -1) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found stream info");
+        return;
+    }
+    pCodecCtx = pInputCtx->streams[video_index]->codec;
+    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    if (!pCodec) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_find_decoder error");
+        return;
+    }
+    if (avcodec_open2(pCodecCtx, pCodec, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_open2 error");
+        return;
+    }
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    pFrameSrc = av_frame_alloc();
+    pFrameDst = av_frame_alloc();
+    pBsf = av_bitstream_filter_init("h264_mp4toannexb");
+    pSws = sws_getContext(
+            pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt,
+            pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P,
+            SWS_BICUBIC, 0, 0, 0);
+    int size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height, 1);
+    av_image_fill_arrays(
+            pFrameDst->data, pFrameDst->linesize,
+            (const uint8_t*)av_malloc(size), AV_PIX_FMT_YUV420P,
+            pCodecCtx->width, pCodecCtx->height, 1);
+    while (av_read_frame(pInputCtx, pPacket) >= 0) {
+        if (pPacket->stream_index == video_index) {
+            avcodec_decode_video2(pCodecCtx, pFrameSrc, &got_picture, pPacket);
+            if (got_picture) {
+                av_bitstream_filter_filter(pBsf, pCodecCtx, 0, &pPacket->data, &pPacket->size, pPacket->data, pPacket->size, 0);
+                sws_scale(pSws, pFrameSrc->data, pFrameSrc->linesize, 0, pCodecCtx->height, pFrameDst->data, pFrameDst->linesize);
+                fwrite(pFrameDst->data[0], pCodecCtx->width * pCodecCtx->height, 1, filedst);
+                fwrite(pFrameDst->data[1], (pCodecCtx->width * pCodecCtx->height) / 4, 1, filedst);
+                fwrite(pFrameDst->data[2], (pCodecCtx->width * pCodecCtx->height) / 4, 1, filedst);
+            }
+        }
+        av_free_packet(pPacket);
+    }
+    av_frame_unref(pFrameSrc);
+    av_frame_unref(pFrameDst);
+    avcodec_close(pCodecCtx);
+    avformat_close_input(&pInputCtx);
+    av_bitstream_filter_close(pBsf);
+    sws_freeContext(pSws);
+    env->ReleaseStringUTFChars(jsrcfile, srcfile);
+    env->ReleaseStringUTFChars(jpath, path);
 }

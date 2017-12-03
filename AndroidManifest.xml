@@ -287,6 +287,11 @@
             android:name="com.ring0.ffmpegandroid.SimpleFFmpegPcmPlayerActivity"
             android:label="@string/simple_ffmpeg_audio_pcm_player_name" >
         </activity>
+        <!-- SimpleFFmpegVideoDecoderActivity -->
+        <activity
+            android:name="com.ring0.ffmpegandroid.SimpleFFmpegVideoDecoderActivity"
+            android:label="@string/simple_ffmpeg_video_decoder_name" >
+        </activity>
     </application>
 
 </manifest>
