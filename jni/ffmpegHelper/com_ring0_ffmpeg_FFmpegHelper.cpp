@@ -3668,6 +3668,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1video_
     SwsContext               *pSws        =  0;
     int                       video_index = -1;
     int                       got_picture =  0;
+    int                       skip_frame  =  0;
 
     av_log_set_callback(ff_log_callback);
     av_register_all();
@@ -3725,8 +3726,21 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1video_
                 fwrite(pFrameDst->data[1], (pCodecCtx->width * pCodecCtx->height) / 4, 1, filedst);
                 fwrite(pFrameDst->data[2], (pCodecCtx->width * pCodecCtx->height) / 4, 1, filedst);
             }
+            else {
+                skip_frame++;
+            }
         }
-        av_free_packet(pPacket);
+        //av_free_packet(pPacket);
+    }
+    for (int i = 0; i < skip_frame; i++) {
+        avcodec_decode_video2(pCodecCtx, pFrameSrc, &got_picture, pPacket);
+        if (got_picture) {
+            sws_scale(pSws, pFrameSrc->data, pFrameSrc->linesize, 0, pCodecCtx->height, pFrameDst->data, pFrameDst->linesize);
+            fwrite(pFrameDst->data[0],  pCodecCtx->width * pCodecCtx->height, 1,      filedst);
+            fwrite(pFrameDst->data[1], (pCodecCtx->width * pCodecCtx->height) / 4, 1, filedst);
+            fwrite(pFrameDst->data[2], (pCodecCtx->width * pCodecCtx->height) / 4, 1, filedst);
+        }
+        //av_free_packet(pPacket);
     }
     av_frame_unref(pFrameSrc);
     av_frame_unref(pFrameDst);
