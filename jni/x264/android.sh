@@ -3,7 +3,7 @@
 #      author: zd
 #      2015-2016 iexin
 #########################################################################
-export NDK=/home/ring0/develop/android-ndk-r10d
+export NDK=/home/ring0/develop/android-ndk-r12b
 export HOST=
 export CROSS=
 export SYSROOT=
@@ -21,7 +21,7 @@ __internal_build_env_armeabi_v5a(){
       SYSROOT=$NDK/platforms/android-21/arch-arm
       PREFIX_LIB=$NDK/platforms/android-21/arch-arm/usr/lib
       LD=$CROSS"ld"
-      GCC_LIB=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9/libgcc.a
+      GCC_LIB=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9.x/libgcc.a
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -marm -march=arm -fvisibility=hidden
       DISABLE_ASM=""
 }
@@ -33,7 +33,7 @@ __internal_build_env_armeabi_v7a(){
       SYSROOT=$NDK/platforms/android-21/arch-arm
       PREFIX_LIB=$NDK/platforms/android-21/arch-arm/usr/lib
       LD=$CROSS"ld"
-      GCC_LIB=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9/libgcc.a
+      GCC_LIB=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9.x/libgcc.a
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -mfloat-abi=softfp -mfpu=neon -marm -march=arm -fvisibility=hidden
       DISABLE_ASM=""
 }
@@ -45,7 +45,7 @@ __internal_build_env_aarch64_v8a(){
       SYSROOT=$NDK/platforms/android-21/arch-arm64
       PREFIX_LIB=$NDK/platforms/android-21/arch-arm64/usr/lib
       LD=$CROSS"ld"
-      GCC_LIB=$NDK/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9/libgcc.a
+      GCC_LIB=$NDK/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9.x/libgcc.a
       CC_FLAGS=-fPIC -DANDROID -Wfatal-errors -Wno-deprecated -mfloat-abi=softfp -mfpu=neon -marm -march=arm64 -fvisibility=hidden
       DISABLE_ASM=""
 }
@@ -57,7 +57,7 @@ __internal_build_env_intel_x86(){
       SYSROOT=$NDK/platforms/android-21/arch-x86
       PREFIX_LIB=$NDK/platforms/android-21/arch-x86/usr/lib
       LD=$CROSS"ld"
-      GCC_LIB=$NDK/toolchains/x86-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9/libgcc.a
+      GCC_LIB=$NDK/toolchains/x86-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9.x/libgcc.a
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -mssse3 -mavx -fvisibility=hidden
       DISABLE_ASM="--disable-asm"
 }
@@ -69,7 +69,7 @@ __internal_build_env_intel_x86_64(){
       SYSROOT=$NDK/platforms/android-21/arch-x86_64
       PREFIX_LIB=$NDK/platforms/android-21/arch-x86_64/usr/lib64
       LD=$CROSS"ld"
-      GCC_LIB=$NDK/toolchains/x86_64-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9/libgcc.a
+      GCC_LIB=$NDK/toolchains/x86_64-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9.x/libgcc.a
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -mssse3 -mavx -fvisibility=hidden
       DISABLE_ASM="--disable-asm"
 }
@@ -81,7 +81,7 @@ __internal_build_env_mips32(){
       SYSROOT=$NDK/platforms/android-21/arch-mips
       PREFIX_LIB=$NDK/platforms/android-21/arch-mips/usr/lib
       LD=$CROSS"ld"
-      GCC_LIB=$NDK/toolchains/mipsel-linux-android-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9/libgcc.a
+      GCC_LIB=$NDK/toolchains/mipsel-linux-android-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9.x/libgcc.a
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated
       DISABLE_ASM="--disable-asm"
 }
@@ -93,7 +93,7 @@ __internal_build_env_mips64(){
       SYSROOT=$NDK/platforms/android-21/arch-mips64
       PREFIX_LIB=$NDK/platforms/android-21/arch-mips64/usr/lib64
       LD=$CROSS"ld"
-      GCC_LIB=$NDK/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9/libgcc.a
+      GCC_LIB=$NDK/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/lib/gcc/$HOST/4.9.x/libgcc.a
       CC_FLAGS=-fPIC -DANDROID -D__thumb__ -Wfatal-errors -Wno-deprecated -mhard-float -mmsa -mdsp -mdspr2
       DISABLE_ASM="--disable-asm"
 }
@@ -127,7 +127,6 @@ __internal_build_shread(){
             -nostdlib                \
             -Bsymbolic               \
             --whole-archive          \
-            --no-undefined           \
             -o $PREFIX/libx264.so    \
             $PREFIX/lib/libx264.a    \
             -lc -lm -lz -ldl -llog   \

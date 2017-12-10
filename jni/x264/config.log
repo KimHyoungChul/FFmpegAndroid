@@ -1,7 +1,7 @@
 checking for -Werror=unknown-warning-option... no
 Failed commandline was:
 --------------------------------------------------
-/home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r10d/platforms/android-21/arch-mips64   -Werror=unknown-warning-option   --sysroot=/home/ring0/develop/android-ndk-r10d/platforms/android-21/arch-mips64 -o conftest
+/home/ring0/develop/android-ndk-r12b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r12b/platforms/android-21/arch-mips64   -Werror=unknown-warning-option   --sysroot=/home/ring0/develop/android-ndk-r12b/platforms/android-21/arch-mips64 -o conftest
 cc1: error: -Werror=unknown-warning-option: no option -Wunknown-warning-option
 --------------------------------------------------
 Failed program was:
@@ -9,20 +9,20 @@ Failed program was:
 int main (void) {  return 0; }
 --------------------------------------------------
 x264 configure script
-Command line options: "--prefix=android/mips64" "--host=mips64el-linux-android" "--sysroot=/home/ring0/develop/android-ndk-r10d/platforms/android-21/arch-mips64" "--cross-prefix=/home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-" "--extra-cflags=" "--disable-asm" "--enable-static" "--enable-strip" "--enable-pic" "--disable-cli" "--disable-win32thread" "--disable-avs" "--disable-swscale" "--disable-lavf" "--disable-ffms" "--disable-gpac" "--disable-lsmash"
+Command line options: "--prefix=android/mips64" "--host=mips64el-linux-android" "--sysroot=/home/ring0/develop/android-ndk-r12b/platforms/android-21/arch-mips64" "--cross-prefix=/home/ring0/develop/android-ndk-r12b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-" "--extra-cflags=" "--disable-asm" "--enable-static" "--enable-strip" "--enable-pic" "--disable-cli" "--disable-win32thread" "--disable-avs" "--disable-swscale" "--disable-lavf" "--disable-ffms" "--disable-gpac" "--disable-lsmash"
 
-checking whether /home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc works... yes
-checking whether /home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc supports for( int i = 0; i < 9; i++ ); with -std=gnu99... yes
+checking whether /home/ring0/develop/android-ndk-r12b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc works... yes
+checking whether /home/ring0/develop/android-ndk-r12b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc supports for( int i = 0; i < 9; i++ ); with -std=gnu99... yes
 checking for pthread_create(0,0,0,0); in pthread.h... no
 Failed commandline was:
 --------------------------------------------------
-/home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r10d/platforms/android-21/arch-mips64  -std=gnu99 -D_GNU_SOURCE  -lpthread   --sysroot=/home/ring0/develop/android-ndk-r10d/platforms/android-21/arch-mips64 -lm -o conftest
+/home/ring0/develop/android-ndk-r12b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/mips64el-linux-android-gcc conftest.c  -Wall -I. -I$(SRCPATH) --sysroot=/home/ring0/develop/android-ndk-r12b/platforms/android-21/arch-mips64  -std=gnu99 -D_GNU_SOURCE  -lpthread   --sysroot=/home/ring0/develop/android-ndk-r12b/platforms/android-21/arch-mips64 -lm -o conftest
 conftest.c: In function 'main':
 conftest.c:2:1: warning: null argument where non-null required (argument 1) [-Wnonnull]
  int main (void) { pthread_create(0,0,0,0); return 0; }
  ^
 conftest.c:2:1: warning: null argument where non-null required (argument 3) [-Wnonnull]
-/home/ring0/develop/android-ndk-r10d/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/../lib/gcc/mips64el-linux-android/4.9/../../../../mips64el-linux-android/bin/ld: cannot find -lpthread
+/home/ring0/develop/android-ndk-r12b/toolchains/mips64el-linux-android-4.9/prebuilt/linux-x86_64/bin/../lib/gcc/mips64el-linux-android/4.9.x/../../../../mips64el-linux-android/bin/ld: cannot find -lpthread
 collect2: error: ld returned 1 exit status
 --------------------------------------------------
 Failed program was:
