@@ -7,6 +7,8 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,6 +20,7 @@ public class SimpleFFmpegAudioPlayerActivity extends Activity implements OnClick
     private TextView tvFileName;
     private EditText etFileName;
     private Button   btDecode;
+    private SeekBar  sbStereo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +35,23 @@ public class SimpleFFmpegAudioPlayerActivity extends Activity implements OnClick
         tvFileName = (TextView)llFileNameMain.findViewById(R.id.tvFileName);
         etFileName = (EditText)llFileNameMain.findViewById(R.id.etFileName);
         btDecode = (Button)findViewById(R.id.btDecode);
+        sbStereo = (SeekBar)findViewById(R.id.sbStereo);
+        sbStereo.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                System.out.println("zd-progress: " + seekBar.getProgress());
+                FFmpegHelper.simple_ffmpeg_audio_player_stereo(seekBar.getProgress());
+            }
+            
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+            
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,
+                    boolean fromUser) {
+            }
+        });
         
         tvFileName.setText(getResources().getString(R.string.simple_ffmpeg_audio_player_filename));
         etFileName.setHint(getResources().getString(R.string.simple_ffmpeg_audio_player_filename_hint));

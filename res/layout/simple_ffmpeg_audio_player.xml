@@ -22,6 +22,14 @@
             android:layout_weight="1" />
     </LinearLayout>
     
+    <SeekBar 
+        android:id="@+id/sbStereo"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:progress="5"
+        android:max="10"
+        />
+    
     <Button
         android:id="@+id/btDecode"
         android:layout_width="fill_parent"

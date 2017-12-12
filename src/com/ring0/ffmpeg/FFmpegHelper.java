@@ -106,6 +106,7 @@ public class FFmpegHelper {
     public static native void simple_ffmpeg_encoder(String srcfile, String path, int width, int hegiht, int encoder_type);
     // 精简的音频播放器
     public static native void simple_ffmpeg_audio_player(String filename);
+    public static native void simple_ffmpeg_audio_player_stereo(float stereo);
     // yuv420p 转视频
     public static native void simple_yuv420p_to_video(String yuvfile, String videofile, int width, int height);
     // yuv420p 保存为图片

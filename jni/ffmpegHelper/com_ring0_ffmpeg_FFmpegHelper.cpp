@@ -93,6 +93,7 @@ static       int                           got_picture          = 0;
 static       AVSampleFormat                out_sample_fmt       = AV_SAMPLE_FMT_U8;
 static       int                           out_sample_rate      = 44100;
 static       int                           out_channel_layout   = 2;
+static float value = 2.5;
 
 struct Data {
     void *buffer;
@@ -1390,7 +1391,7 @@ void android_opensles_play_buffer(int channel, int sample) {
             sample * 1000,                // samplesPerSec
             SL_PCMSAMPLEFORMAT_FIXED_16,  // bitsPerSample
             SL_PCMSAMPLEFORMAT_FIXED_16,  // containerSize
-            SL_SPEAKER_FRONT_CENTER,      // channelMask
+            SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,      // channelMask
             SL_BYTEORDER_LITTLEENDIAN     // endianness
     };
     SLDataSource            sl_source = {&sl_queue, &sl_pcm};
@@ -1412,16 +1413,34 @@ void android_opensles_play_buffer(int channel, int sample) {
     android_opensles_callback(l_sl_queue, 0);
 }
 
+void stereo_process(short *inblock, short *outblock, int sample) {
+    for (int i = 0; i < sample; i++) {
+        float left   = (float)(*inblock + 0);
+        float right  = (float)(*inblock + 1);
+        float center = (left + right) / 2;
+
+        *(outblock + 0) = (short)(center + (left  - center) * value);
+        *(outblock + 1) = (short)(center + (right - center) * value);
+
+        inblock  += 2;
+        outblock += 2;
+    }
+}
+
 void android_opensles_callback(SLAndroidSimpleBufferQueueItf queue, void *data) {
     while (av_read_frame(pFormatCtx, pPacket) >= 0) {
         if (pPacket->stream_index == audio_index) {
             int ret = avcodec_decode_audio4(pCodecCtx, pFrame, &got_picture, pPacket);
             if (got_picture) {
-                int size = av_samples_get_buffer_size(pFrame->linesize, 1, pFrame->nb_samples, AV_SAMPLE_FMT_S16, 1);
+                int size = av_samples_get_buffer_size(pFrame->linesize, 2, pFrame->nb_samples, AV_SAMPLE_FMT_S16, 1);
+
                 char *pcm = (char*) malloc(sizeof(char) * size);
+                char *pcm2 = (char*)malloc(sizeof(char) * size);
                 swr_convert(pSwrCtx, (uint8_t**)&pcm, size, (const uint8_t**)(pFrame->data), pFrame->nb_samples);
-                (*queue)->Enqueue(queue, pcm, size);
+                stereo_process((short*)pcm, (short*)pcm2, pFrame->nb_samples);
+                (*queue)->Enqueue(queue, pcm2, size);
                 free(pcm);
+                free(pcm2);
                 return;
             }
         }
@@ -1436,7 +1455,7 @@ void android_opensles_callback(SLAndroidSimpleBufferQueueItf queue, void *data) 
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_1player
   (JNIEnv *env, jclass, jstring jfilename) {
     char *filename = (char*)env->GetStringUTFChars(jfilename, 0);
-    av_log_set_callback(ff_log_callback);
+    //av_log_set_callback(ff_log_callback);
     av_register_all();
     avformat_network_init();
     pFormatCtx = avformat_alloc_context();
@@ -1479,10 +1498,15 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_
     av_opt_set_int(pSwrCtx, "out_sample_rate",    pCodecCtx->sample_rate,    0);
 
     av_opt_set_int(pSwrCtx, "in_channel_layout",  pCodecCtx->channel_layout, 0);
-    av_opt_set_int(pSwrCtx, "out_channel_layout", AV_CH_LAYOUT_MONO,         0);
+    av_opt_set_int(pSwrCtx, "out_channel_layout", AV_CH_LAYOUT_STEREO,         0);
     swr_init(pSwrCtx);
 
-    android_opensles_play_buffer(1, pCodecCtx->sample_rate);
+    android_opensles_play_buffer(2, pCodecCtx->sample_rate);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_1player_1stereo
+  (JNIEnv *, jclass, jfloat jvalue) {
+    value = jvalue;
 }
 
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1video
