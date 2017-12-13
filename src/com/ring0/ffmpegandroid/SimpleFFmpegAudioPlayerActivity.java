@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -21,6 +24,7 @@ public class SimpleFFmpegAudioPlayerActivity extends Activity implements OnClick
     private EditText etFileName;
     private Button   btDecode;
     private SeekBar  sbStereo;
+    private CheckBox cbStereo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,7 +56,13 @@ public class SimpleFFmpegAudioPlayerActivity extends Activity implements OnClick
                     boolean fromUser) {
             }
         });
-        
+        cbStereo = (CheckBox)findViewById(R.id.cbStereo);
+        cbStereo.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                FFmpegHelper.simple_ffmpeg_audio_player_enable_stereo(isChecked);
+            }
+        });
         tvFileName.setText(getResources().getString(R.string.simple_ffmpeg_audio_player_filename));
         etFileName.setHint(getResources().getString(R.string.simple_ffmpeg_audio_player_filename_hint));
         btDecode.setText(getResources().getString(R.string.simple_ffmpeg_audio_player_decode));

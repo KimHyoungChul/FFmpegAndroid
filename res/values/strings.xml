@@ -323,7 +323,7 @@
     <!-- SimpleFFmpegAudioPlayerActivity -->
     <string name="simple_ffmpeg_audio_player_filename">文件名</string>
     <string name="simple_ffmpeg_audio_player_filename_hint">这里填入要播放的音频文件</string>
-    <string name="simple_ffmpeg_audio_player_decode">解码</string>
+    <string name="simple_ffmpeg_audio_player_decode">播放</string>
     <string name="simple_ffmpeg_audio_player_toast_filename">这里填入要播放的音频文件</string>
     <!-- SimpleYuv420pToVideo -->
     <string name="simple_yuv420p_to_video_srcfile">yuv420p 文件</string>

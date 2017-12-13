@@ -93,7 +93,8 @@ static       int                           got_picture          = 0;
 static       AVSampleFormat                out_sample_fmt       = AV_SAMPLE_FMT_U8;
 static       int                           out_sample_rate      = 44100;
 static       int                           out_channel_layout   = 2;
-static float value = 2.5;
+static float value         = 2.5;
+static bool  stereo = true;
 
 struct Data {
     void *buffer;
@@ -1435,12 +1436,18 @@ void android_opensles_callback(SLAndroidSimpleBufferQueueItf queue, void *data) 
                 int size = av_samples_get_buffer_size(pFrame->linesize, 2, pFrame->nb_samples, AV_SAMPLE_FMT_S16, 1);
 
                 char *pcm = (char*) malloc(sizeof(char) * size);
-                char *pcm2 = (char*)malloc(sizeof(char) * size);
                 swr_convert(pSwrCtx, (uint8_t**)&pcm, size, (const uint8_t**)(pFrame->data), pFrame->nb_samples);
-                stereo_process((short*)pcm, (short*)pcm2, pFrame->nb_samples);
-                (*queue)->Enqueue(queue, pcm2, size);
+                if (stereo) {
+                    char *pcm2 = (char*) malloc(sizeof(char) * size);
+                    stereo_process((short*)pcm, (short*)pcm2, pFrame->nb_samples);
+                    (*queue)->Enqueue(queue, pcm2, size);
+                    free(pcm2);
+                }
+                else {
+                    (*queue)->Enqueue(queue, pcm, size);
+                }
+                __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "request pcm");
                 free(pcm);
-                free(pcm2);
                 return;
             }
         }
@@ -1495,18 +1502,23 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_
     av_opt_set_sample_fmt(pSwrCtx, "out_sample_fmt", AV_SAMPLE_FMT_S16,  0);
 
     av_opt_set_int(pSwrCtx, "in_sample_rate",     pCodecCtx->sample_rate,    0);
-    av_opt_set_int(pSwrCtx, "out_sample_rate",    pCodecCtx->sample_rate,    0);
+    av_opt_set_int(pSwrCtx, "out_sample_rate",    44100,    0);
 
     av_opt_set_int(pSwrCtx, "in_channel_layout",  pCodecCtx->channel_layout, 0);
     av_opt_set_int(pSwrCtx, "out_channel_layout", AV_CH_LAYOUT_STEREO,         0);
     swr_init(pSwrCtx);
 
-    android_opensles_play_buffer(2, pCodecCtx->sample_rate);
+    android_opensles_play_buffer(2, 44100);
 }
 
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_1player_1stereo
   (JNIEnv *, jclass, jfloat jvalue) {
     value = jvalue;
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_1player_1enable_1stereo
+  (JNIEnv *, jclass, jboolean jstereo) {
+    stereo = jstereo;
 }
 
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1yuv420p_1to_1video
