@@ -158,6 +158,15 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1audio_
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1video_1decoder
   (JNIEnv *, jclass, jstring, jstring);
 
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediaplayer_1play
+  (JNIEnv *, jclass, jstring, jboolean, jobject);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediaplayer_1init
+  (JNIEnv *, jclass);
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediaplayer_1renderer
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

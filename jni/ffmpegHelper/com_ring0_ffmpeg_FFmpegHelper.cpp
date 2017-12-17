@@ -3788,3 +3788,430 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1video_
     env->ReleaseStringUTFChars(jsrcfile, srcfile);
     env->ReleaseStringUTFChars(jpath, path);
 }
+
+struct AudioPacket {
+    char *pcm;
+    int  size;
+    double pts;
+};
+struct VideoPacket {
+    char *yuv;
+    int size;
+    int width;
+    int height;
+    double pts;
+};
+
+typedef struct PlayerContext {
+    AVFormatContext *pFormatCtx;
+
+    AVCodecContext  *pVCodecCtx;
+    AVStream        *pVStream;
+    AVCodec         *pVCodec;
+    SwsContext      *pSws;
+    jobject         jni_renderer;
+
+    AVCodecContext  *pACodecCtx;
+    AVStream        *pAStream;
+    AVCodec         *pACodec;
+    SwrContext      *pSwr;
+
+    std::list<AVPacket*> *video_queue;
+    std::list<AVPacket*> *audio_queue;
+    std::list<AudioPacket*> *audio_pkt;
+    std::list<VideoPacket*> *video_pkt;
+
+    int                   video_index;
+    int                   audio_index;
+    int                   video_status;
+    int                   audio_status;
+
+    double                audio_pts;
+    int                   view_width;
+    int                   view_height;
+    pthread_mutex_t      *mutex;
+};
+
+#define THREAD_STATUS_RUNNING  0
+#define THREAD_STATUS_COMPLETE 1
+
+void* video_thread(void *pdata);
+void* audio_thread(void *pdata);
+void init_opensles(PlayerContext *pACtx, int channels, int sample_rate);
+void opensles_callback(SLAndroidSimpleBufferQueueItf queue, void *data);
+static JavaVM *vm;
+static PlayerContext *pGlobalCtx = 0;
+
+int lockmgr(void **mtx, enum AVLockOp op) {
+    switch (op) {
+    case AV_LOCK_CREATE: {
+        pthread_mutex_t *mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
+        pthread_mutex_init(mutex, 0);
+        *mtx = mutex;
+        return 0;
+    }
+    case AV_LOCK_OBTAIN:
+        return !!pthread_mutex_lock((pthread_mutex_t*)*mtx);
+    case AV_LOCK_RELEASE:
+        return !!pthread_mutex_unlock((pthread_mutex_t*)*mtx);
+    case AV_LOCK_DESTROY:
+        pthread_mutex_destroy((pthread_mutex_t*)*mtx);
+        return 0;
+    }
+    return 1;
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediaplayer_1play
+  (JNIEnv *env, jclass, jstring jsrcfile, jboolean hard, jobject jinterf) {
+
+    char *srcfile = (char*)env->GetStringUTFChars(jsrcfile, 0);
+    AVFormatContext *pFormatCtx = 0;
+    AVCodecContext  *pACodecCtx = 0;
+    AVCodecContext  *pVCodecCtx = 0;
+    AVCodec         *pVCodec    = 0;
+    AVCodec         *pACodec    = 0;
+    AVStream        *pAStream   = 0;
+    AVStream        *pVStream   = 0;
+    AVPacket        *pPacket    = 0;
+    SwsContext      *pSws       = 0;
+    SwrContext      *pSwr       = 0;
+    int video_index = -1;
+    int audio_index = -1;
+    int got_picture = 0;
+
+    //av_log_set_callback(ff_log_callback);
+    av_register_all();
+    avformat_network_init();
+    avcodec_register_all();
+    av_lockmgr_register(lockmgr);
+    pFormatCtx = avformat_alloc_context();
+    if (avformat_open_input(&pFormatCtx, srcfile, 0, 0) != 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_open_input error");
+        return;
+    }
+    if (avformat_find_stream_info(pFormatCtx, 0) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avformat_find_stream_info error");
+        return;
+    }
+    for (int i = 0; i < pFormatCtx->nb_streams; i++) {
+        if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_index = i;
+        }
+        else if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audio_index = i;
+        }
+    }
+    if (video_index != -1) {
+        pVStream   = pFormatCtx->streams[video_index];
+        pVCodecCtx = pFormatCtx->streams[video_index]->codec;
+        pVCodec    = avcodec_find_decoder(pVCodecCtx->codec_id);
+        if (!pVCodec) {
+            __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found video decoder");
+            return;
+        }
+        if (avcodec_open2(pVCodecCtx, pVCodec, 0) < 0) {
+            __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_open2 error");
+            return;
+        }
+    }
+    if (audio_index != -1) {
+        pAStream = pFormatCtx->streams[audio_index];
+        pACodecCtx = pFormatCtx->streams[audio_index]->codec;
+        pACodec = avcodec_find_decoder(pACodecCtx->codec_id);
+        if (!pACodec) {
+            __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_find_decoder error");
+            return;
+        }
+        if (avcodec_open2(pACodecCtx, pACodec, 0) < 0) {
+            __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "avcodec_open2 error");
+        }
+    }
+    pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    pSws = sws_getContext(
+            pVCodecCtx->width, pVCodecCtx->height, pVCodecCtx->pix_fmt,
+            pVCodecCtx->width, pVCodecCtx->height, AV_PIX_FMT_YUV420P,
+            SWS_BICUBIC, 0, 0, 0);
+    pSwr = swr_alloc();
+    av_opt_set_sample_fmt(pSwr, "in_sample_fmt",     pACodecCtx->sample_fmt,  0);
+    av_opt_set_sample_fmt(pSwr, "out_sample_fmt",    AV_SAMPLE_FMT_S16,       0);
+    av_opt_set_int       (pSwr, "in_sample_rate",    pACodecCtx->sample_rate, 0);
+    av_opt_set_int       (pSwr, "out_sample_rate",   44100,                   0);
+    av_opt_set_int       (pSwr, "in_channel_count",  pACodecCtx->channels,    0);
+    av_opt_set_int       (pSwr, "out_channel_count", 2,                       0);
+    swr_init(pSwr);
+
+    pthread_mutex_t *mutex = 0;
+    pthread_t       *video = 0;
+    pthread_t       *audio = 0;
+    PlayerContext   *pCtx = (PlayerContext*)malloc(sizeof(PlayerContext));
+    mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
+    video = (pthread_t*)malloc(sizeof(pthread_t));
+    audio = (pthread_t*)malloc(sizeof(pthread_t));
+
+    pthread_mutex_init(mutex, 0);
+    pCtx->pFormatCtx  = pFormatCtx;
+
+    pCtx->pVCodecCtx  = pVCodecCtx;
+    pCtx->pVStream    = pVStream;
+    pCtx->pVCodec     = pVCodec;
+    pCtx->pSws        = pSws;
+    pCtx->jni_renderer= (jobject)env->NewGlobalRef(jinterf);
+
+    pCtx->pACodecCtx  = pACodecCtx;
+    pCtx->pAStream    = pAStream;
+    pCtx->pACodec     = pACodec;
+    pCtx->pSwr        = pSwr;
+
+    pCtx->video_queue = new std::list<AVPacket*>();
+    pCtx->audio_queue = new std::list<AVPacket*>();
+    pCtx->video_pkt = new std::list<VideoPacket*>();
+    pCtx->audio_pkt = new std::list<AudioPacket*>();
+    pCtx->video_queue->clear();
+    pCtx->audio_queue->clear();
+    pCtx->video_pkt->clear();
+    pCtx->audio_pkt->clear();
+    pCtx->video_index = video_index;
+    pCtx->audio_index = audio_index;
+    pCtx->video_status= THREAD_STATUS_RUNNING;
+    pCtx->audio_status= THREAD_STATUS_RUNNING;
+    pCtx->mutex       = mutex;
+    pCtx->audio_pts   = 0;
+    pCtx->view_width  = 0;
+    pCtx->view_height = 0;
+    pGlobalCtx        = pCtx;
+
+    pthread_create(video, 0, video_thread, pCtx);
+    pthread_create(audio, 0, audio_thread, pCtx);
+    init_opensles(pCtx, 2, 44100);
+
+    while (av_read_frame(pFormatCtx, pPacket) >= 0) {
+        if (pPacket->stream_index == video_index) {
+            pthread_mutex_lock(mutex);
+            AVPacket *ref = (AVPacket*)av_malloc(sizeof(AVPacket));
+            av_init_packet(ref);
+            av_packet_ref(ref, pPacket);
+            pCtx->video_queue->push_back(ref);
+            pthread_mutex_unlock(mutex);
+        }
+        else if (pPacket->stream_index == audio_index) {
+            pthread_mutex_lock(mutex);
+            AVPacket *ref = (AVPacket*)av_malloc(sizeof(AVPacket));
+            av_init_packet(ref);
+            av_packet_ref(ref, pPacket);
+            pCtx->audio_queue->push_back(ref);
+            pthread_mutex_unlock(mutex);
+        }
+        av_free_packet(pPacket);
+    }
+    void *vstatus;
+    void *astatus;
+    pthread_join((pthread_t)&video, &vstatus);
+    pthread_join((pthread_t)&audio, &astatus);
+}
+
+void* video_thread(void *pdata) {
+    PlayerContext *pVCtx = (PlayerContext*)pdata;
+    AVPacket *pPacket   = 0;
+    AVFrame  *pFrameSrc = av_frame_alloc();
+    AVFrame  *pFrameDst = av_frame_alloc();
+    bool      exit      = false;
+
+    int size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, pVCtx->pVCodecCtx->width, pVCtx->pVCodecCtx->height, 1);
+    av_image_fill_arrays(
+            pFrameDst->data, pFrameDst->linesize,
+            (const uint8_t*)av_malloc(size), AV_PIX_FMT_YUV420P,
+            pVCtx->pVCodecCtx->width, pVCtx->pVCodecCtx->height, 1);
+
+    while (1) {
+        pPacket = 0;
+        exit = false;
+        pthread_mutex_lock(pVCtx->mutex);
+        if (!pVCtx->video_queue->empty()) {
+            pPacket = pVCtx->video_queue->front();
+            pVCtx->video_queue->pop_front();
+        }
+        pthread_mutex_unlock(pVCtx->mutex);
+        if (pPacket) {
+            if (pPacket->stream_index == pVCtx->video_index) {
+                int got_picture = 0;
+                avcodec_decode_video2(pVCtx->pVCodecCtx, pFrameSrc, &got_picture, pPacket);
+                if (got_picture) {
+                    sws_scale(
+                            pVCtx->pSws,
+                            pFrameSrc->data, pFrameSrc->linesize,
+                            0, pVCtx->pVCodecCtx->height,
+                            pFrameDst->data, pFrameDst->linesize);
+
+                    VideoPacket *vp = (VideoPacket*)malloc(sizeof(VideoPacket));
+                    vp->width  = pVCtx->pVCodecCtx->width;
+                    vp->height = pVCtx->pVCodecCtx->height;
+                    vp->size   = (vp->width * vp->height * 3) / 2;
+                    vp->yuv    = (char*)malloc(vp->size);
+                    vp->pts    = pPacket->pts * av_q2d(pVCtx->pVStream->time_base);
+
+                    char *frame_y = vp->yuv;
+                    char *frame_u = frame_y + (vp->width * vp->height);
+                    char *frame_v = frame_u + ((vp->width * vp->height) / 4);
+                    memcpy(frame_y, pFrameDst->data[0],  vp->width * vp->height);
+                    memcpy(frame_u, pFrameDst->data[1], (vp->width * vp->height) / 4);
+                    memcpy(frame_v, pFrameDst->data[2], (vp->width * vp->height) / 4);
+
+                    pthread_mutex_lock(pVCtx->mutex);
+                    pVCtx->video_pkt->push_back(vp);
+                    pthread_mutex_unlock(pVCtx->mutex);
+
+                    JNIEnv *env = 0;
+                    vm->GetEnv((void**)&env, JNI_VERSION_1_4);
+                    vm->AttachCurrentThread(&env, 0);
+                    env->CallVoidMethod(pVCtx->jni_renderer, FFOnRenderer);
+                    vm->DetachCurrentThread();
+                    //__android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "v");
+                }
+                av_free_packet(pPacket);
+            }
+        }
+    }
+}
+
+void* audio_thread(void *pdata) {
+    PlayerContext *pACtx = (PlayerContext*)pdata;
+    AVPacket *pPacket   = 0;
+    AVFrame  *pFrameSrc = av_frame_alloc();
+    bool      exit      = false;
+    while (1) {
+        pPacket = 0;
+        exit    = false;
+
+        pthread_mutex_lock(pACtx->mutex);
+        if (!pACtx->audio_queue->empty()) {
+            pPacket = pACtx->audio_queue->front();
+            pACtx->audio_queue->pop_front();
+        }
+        pthread_mutex_unlock(pACtx->mutex);
+
+        if (pPacket) {
+            if (pPacket->stream_index == pACtx->audio_index) {
+                int got_picture = 0;
+                avcodec_decode_audio4(pACtx->pACodecCtx, pFrameSrc, &got_picture, pPacket);
+                if (got_picture) {
+                    int size = av_samples_get_buffer_size(pFrameSrc->linesize, 2, pFrameSrc->nb_samples, AV_SAMPLE_FMT_S16, 1);
+                    char *pcm = (char*)malloc(size);
+                    swr_convert(pACtx->pSwr, (uint8_t**)&pcm, size, (const unsigned char**)pFrameSrc->data, pFrameSrc->nb_samples);
+
+                    AudioPacket *ap = (AudioPacket*)malloc(sizeof(AudioPacket));
+                    ap->pcm  = pcm;
+                    ap->size = size;
+                    ap->pts  = pPacket->pts * av_q2d(pACtx->pAStream->time_base);
+
+                    pthread_mutex_lock(pACtx->mutex);
+                    pACtx->audio_pkt->push_back(ap);
+                    pthread_mutex_unlock(pACtx->mutex);
+                    //__android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "a");
+                }
+                av_free_packet(pPacket);
+            }
+        }
+    }
+}
+
+void init_opensles(PlayerContext *pCtx, int channels, int sample_rate) {
+    SLDataLocator_AndroidSimpleBufferQueue sl_queue = {
+    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2 };
+    SLDataFormat_PCM sl_pcm = {
+    SL_DATAFORMAT_PCM, channels, // numChannels
+            sample_rate * 1000, // samplesPerSec
+            SL_PCMSAMPLEFORMAT_FIXED_16, // bitsPerSample
+            SL_PCMSAMPLEFORMAT_FIXED_16, // containerSize
+            SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT, // channelMask
+            SL_BYTEORDER_LITTLEENDIAN // endianness
+            };
+    SLDataSource sl_source = { &sl_queue, &sl_pcm };
+    SLDataLocator_OutputMix sl_mix =
+            { SL_DATALOCATOR_OUTPUTMIX, g_sl_mixobject };
+    SLDataSink sl_sink = { &sl_mix, 0 };
+
+    const SLInterfaceID ids[3] = { SL_IID_BUFFERQUEUE, SL_IID_EFFECTSEND,
+            SL_IID_VOLUME };
+    const SLboolean req[3] =
+            { SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
+
+    (*g_sl_engine)->CreateAudioPlayer(g_sl_engine, &l_sl_player, &sl_source,
+            &sl_sink, 3, ids, req);
+    (*l_sl_player)->Realize(l_sl_player, SL_BOOLEAN_FALSE);
+    (*l_sl_player)->GetInterface(l_sl_player, SL_IID_PLAY, &l_sl_play);
+    (*l_sl_player)->GetInterface(l_sl_player, SL_IID_BUFFERQUEUE, &l_sl_queue);
+    (*l_sl_player)->GetInterface(l_sl_player, SL_IID_EFFECTSEND, &l_sl_effect);
+    (*l_sl_player)->GetInterface(l_sl_player, SL_IID_VOLUME, &l_sl_volume);
+
+    (*l_sl_queue)->RegisterCallback(l_sl_queue, opensles_callback, pCtx);
+    (*l_sl_play)->SetPlayState(l_sl_play, SL_PLAYSTATE_PLAYING);
+    opensles_callback(l_sl_queue, pCtx);
+}
+
+void opensles_callback(SLAndroidSimpleBufferQueueItf queue, void *data) {
+    PlayerContext *pCtx = (PlayerContext*)data;
+    if (pCtx) {
+        AudioPacket *ap = 0;
+        pthread_mutex_lock(pCtx->mutex);
+        if (!pCtx->audio_pkt->empty()) {
+            ap = pCtx->audio_pkt->front();
+            pCtx->audio_pkt->pop_front();
+        }
+        pthread_mutex_unlock(pCtx->mutex);
+
+        if (ap) {
+            pthread_mutex_lock(pCtx->mutex);
+            pCtx->audio_pts = ap->pts;
+            pthread_mutex_unlock(pCtx->mutex);
+            (*queue)->Enqueue(queue, (const void*)ap->pcm, ap->size);
+            free(ap->pcm);
+            free(ap);
+        }
+        else {
+            // 使用空数据(静音)
+            char *pcm = (char*)malloc(sizeof(char) * 1000);
+            (*queue)->Enqueue(queue, (const void*)pcm, 1000);
+            free(pcm);
+        }
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediaplayer_1init
+  (JNIEnv *env, jclass) {
+    jobject jlocal        = env->FindClass("com/ring0/ffmpeg/FFmpegHelper$FFmpegPlayerInterface");
+    FFmpegPlayerInterface = (jclass)env->NewGlobalRef(jlocal);
+    FFOnRenderer          = env->GetMethodID(FFmpegPlayerInterface, "OnRenderer", "()V");
+    env->DeleteLocalRef(jlocal);
+
+    vm = 0;
+    env->GetJavaVM((JavaVM**)&vm);
+    av_jni_set_java_vm(vm, 0);
+}
+
+JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediaplayer_1renderer
+  (JNIEnv *, jclass) {
+    if (pGlobalCtx) {
+        VideoPacket *vp = 0;
+        pthread_mutex_lock(pGlobalCtx->mutex);
+        if (!pGlobalCtx->video_pkt->empty()) {
+            if (pGlobalCtx->video_pkt->front()->pts <= pGlobalCtx->audio_pts) {
+                vp = pGlobalCtx->video_pkt->front();
+                pGlobalCtx->video_pkt->pop_front();
+            }
+        }
+        pthread_mutex_unlock(pGlobalCtx->mutex);
+
+        if (vp) {
+            if (pGlobalCtx->view_width != vp->width || pGlobalCtx->view_height != vp->height) {
+                pGlobalCtx->view_width  = vp->width;
+                pGlobalCtx->view_height = vp->height;
+                setupShader(vp->width, vp->height);
+            }
+            if (vp->yuv) {
+                setupTexture(vp->yuv, vp->width, vp->height);
+            }
+            free(vp->yuv);
+            free(vp);
+        }
+    }
+}
