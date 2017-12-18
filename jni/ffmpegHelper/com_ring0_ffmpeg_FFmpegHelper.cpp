@@ -3820,7 +3820,6 @@ typedef struct PlayerContext {
     std::list<AVPacket*> *audio_queue;
     std::list<AudioPacket*> *audio_pkt;
     std::list<VideoPacket*> *video_pkt;
-
     int                   video_index;
     int                   audio_index;
     int                   video_status;
@@ -3830,6 +3829,10 @@ typedef struct PlayerContext {
     int                   view_width;
     int                   view_height;
     pthread_mutex_t      *mutex;
+
+    char                 *yuv;
+    int                   width;
+    int                   height;
 };
 
 #define THREAD_STATUS_RUNNING  0
@@ -3904,7 +3907,32 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediap
     if (video_index != -1) {
         pVStream   = pFormatCtx->streams[video_index];
         pVCodecCtx = pFormatCtx->streams[video_index]->codec;
-        pVCodec    = avcodec_find_decoder(pVCodecCtx->codec_id);
+//        if (hard) {
+//            // 查询可用的硬件解码器
+//            switch (pVCodecCtx->codec_id) {
+//            case AV_CODEC_ID_MPEG4:
+//                pVCodec = avcodec_find_decoder_by_name("mpeg4_mediacodec");
+//                break;
+//            case AV_CODEC_ID_H264:
+//                pVCodec = avcodec_find_decoder_by_name("h264_mediacodec");
+//                break;
+//            case AV_CODEC_ID_H265: // AV_CODEC_ID_HEVC
+//                pVCodec = avcodec_find_decoder_by_name("hevc_mediacodec");
+//                break;
+//            case AV_CODEC_ID_VP8:
+//                pVCodec = avcodec_find_decoder_by_name("vp8_mediacodec");
+//                break;
+//            case AV_CODEC_ID_VP9:
+//                pVCodec = avcodec_find_decoder_by_name("vp9_mediacodec");
+//                break;
+//            default:
+//                pVCodec = avcodec_find_decoder(pVCodecCtx->codec_id);
+//                break;
+//            }
+//        } else {
+            // 软件解码
+            pVCodec = avcodec_find_decoder(pVCodecCtx->codec_id);
+//        }
         if (!pVCodec) {
             __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "not found video decoder");
             return;
@@ -3970,6 +3998,9 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediap
     pCtx->audio_queue->clear();
     pCtx->video_pkt->clear();
     pCtx->audio_pkt->clear();
+    pCtx->yuv = 0;
+    pCtx->width = 0;
+    pCtx->height = 0;
     pCtx->video_index = video_index;
     pCtx->audio_index = audio_index;
     pCtx->video_status= THREAD_STATUS_RUNNING;
@@ -4031,6 +4062,8 @@ void* video_thread(void *pdata) {
             pVCtx->video_queue->pop_front();
         }
         pthread_mutex_unlock(pVCtx->mutex);
+
+        __android_log_print(ANDROID_LOG_INFO, "zd-ff", "%d", pVCtx->video_pkt->size());
         if (pPacket) {
             if (pPacket->stream_index == pVCtx->video_index) {
                 int got_picture = 0;
@@ -4060,16 +4093,16 @@ void* video_thread(void *pdata) {
                     pVCtx->video_pkt->push_back(vp);
                     pthread_mutex_unlock(pVCtx->mutex);
 
-                    JNIEnv *env = 0;
-                    vm->GetEnv((void**)&env, JNI_VERSION_1_4);
-                    vm->AttachCurrentThread(&env, 0);
-                    env->CallVoidMethod(pVCtx->jni_renderer, FFOnRenderer);
-                    vm->DetachCurrentThread();
                     //__android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "v");
                 }
                 av_free_packet(pPacket);
             }
         }
+        JNIEnv *env = 0;
+        vm->GetEnv((void**) &env, JNI_VERSION_1_4);
+        vm->AttachCurrentThread(&env, 0);
+        env->CallVoidMethod(pVCtx->jni_renderer, FFOnRenderer);
+        vm->DetachCurrentThread();
     }
 }
 
@@ -4170,6 +4203,7 @@ void opensles_callback(SLAndroidSimpleBufferQueueItf queue, void *data) {
         else {
             // 使用空数据(静音)
             char *pcm = (char*)malloc(sizeof(char) * 1000);
+            memset(pcm, 0, 1000);
             (*queue)->Enqueue(queue, (const void*)pcm, 1000);
             free(pcm);
         }
@@ -4191,27 +4225,44 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediap
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediaplayer_1renderer
   (JNIEnv *, jclass) {
     if (pGlobalCtx) {
-        VideoPacket *vp = 0;
+        int size   = 0;
+        int width  = 0;
+        int height = 0;
+
         pthread_mutex_lock(pGlobalCtx->mutex);
-        if (!pGlobalCtx->video_pkt->empty()) {
-            if (pGlobalCtx->video_pkt->front()->pts <= pGlobalCtx->audio_pts) {
-                vp = pGlobalCtx->video_pkt->front();
+        if (!pGlobalCtx->yuv) {
+            VideoPacket *vp = pGlobalCtx->video_pkt->front();
+            int size = (vp->width * vp->height * 3) / 2;
+            pGlobalCtx->yuv = (char*)malloc(size);
+        }
+
+        if (pGlobalCtx->video_pkt->front()->pts <= pGlobalCtx->audio_pts) {
+            if (!pGlobalCtx->video_pkt->empty()) {
+                VideoPacket *vp = pGlobalCtx->video_pkt->front();
                 pGlobalCtx->video_pkt->pop_front();
+
+                memcpy(pGlobalCtx->yuv, vp->yuv, (vp->width * vp->height * 3) / 2);
+                width = vp->width;
+                height = vp->height;
+                size = (width * height * 3) / 2;
+                pGlobalCtx->width = width;
+                pGlobalCtx->height = height;
+
+                free(vp->yuv);
+                free(vp);
             }
         }
         pthread_mutex_unlock(pGlobalCtx->mutex);
 
-        if (vp) {
-            if (pGlobalCtx->view_width != vp->width || pGlobalCtx->view_height != vp->height) {
-                pGlobalCtx->view_width  = vp->width;
-                pGlobalCtx->view_height = vp->height;
-                setupShader(vp->width, vp->height);
+        if (pGlobalCtx) {
+            if (pGlobalCtx->view_width != pGlobalCtx->width || pGlobalCtx->view_height != pGlobalCtx->height) {
+                pGlobalCtx->view_width  = pGlobalCtx->width;
+                pGlobalCtx->view_height = pGlobalCtx->height;
+                setupShader(pGlobalCtx->width, pGlobalCtx->height);
             }
-            if (vp->yuv) {
-                setupTexture(vp->yuv, vp->width, vp->height);
+            if (pGlobalCtx->yuv) {
+                setupTexture(pGlobalCtx->yuv, pGlobalCtx->width, pGlobalCtx->height);
             }
-            free(vp->yuv);
-            free(vp);
         }
     }
 }
