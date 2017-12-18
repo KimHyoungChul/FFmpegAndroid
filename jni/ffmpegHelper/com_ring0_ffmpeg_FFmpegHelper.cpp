@@ -3831,8 +3831,6 @@ typedef struct PlayerContext {
     pthread_mutex_t      *mutex;
 
     char                 *yuv;
-    int                   width;
-    int                   height;
 };
 
 #define THREAD_STATUS_RUNNING  0
@@ -3930,7 +3928,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediap
 //                break;
 //            }
 //        } else {
-            // 软件解码
+//            // 软件解码
             pVCodec = avcodec_find_decoder(pVCodecCtx->codec_id);
 //        }
         if (!pVCodec) {
@@ -3998,9 +3996,6 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediap
     pCtx->audio_queue->clear();
     pCtx->video_pkt->clear();
     pCtx->audio_pkt->clear();
-    pCtx->yuv = 0;
-    pCtx->width = 0;
-    pCtx->height = 0;
     pCtx->video_index = video_index;
     pCtx->audio_index = audio_index;
     pCtx->video_status= THREAD_STATUS_RUNNING;
@@ -4009,6 +4004,7 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediap
     pCtx->audio_pts   = 0;
     pCtx->view_width  = 0;
     pCtx->view_height = 0;
+    pCtx->yuv = (char*)malloc((pCtx->pVCodecCtx->width * pCtx->pVCodecCtx->height * 3) / 2);
     pGlobalCtx        = pCtx;
 
     pthread_create(video, 0, video_thread, pCtx);
@@ -4092,8 +4088,6 @@ void* video_thread(void *pdata) {
                     pthread_mutex_lock(pVCtx->mutex);
                     pVCtx->video_pkt->push_back(vp);
                     pthread_mutex_unlock(pVCtx->mutex);
-
-                    //__android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "v");
                 }
                 av_free_packet(pPacket);
             }
@@ -4139,7 +4133,6 @@ void* audio_thread(void *pdata) {
                     pthread_mutex_lock(pACtx->mutex);
                     pACtx->audio_pkt->push_back(ap);
                     pthread_mutex_unlock(pACtx->mutex);
-                    //__android_log_print(ANDROID_LOG_INFO, "zd-ff", "%s", "a");
                 }
                 av_free_packet(pPacket);
             }
@@ -4225,17 +4218,10 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediap
 JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediaplayer_1renderer
   (JNIEnv *, jclass) {
     if (pGlobalCtx) {
-        int size   = 0;
-        int width  = 0;
-        int height = 0;
+        int width  = pGlobalCtx->view_width;
+        int height = pGlobalCtx->view_height;
 
         pthread_mutex_lock(pGlobalCtx->mutex);
-        if (!pGlobalCtx->yuv) {
-            VideoPacket *vp = pGlobalCtx->video_pkt->front();
-            int size = (vp->width * vp->height * 3) / 2;
-            pGlobalCtx->yuv = (char*)malloc(size);
-        }
-
         if (pGlobalCtx->video_pkt->front()->pts <= pGlobalCtx->audio_pts) {
             if (!pGlobalCtx->video_pkt->empty()) {
                 VideoPacket *vp = pGlobalCtx->video_pkt->front();
@@ -4244,9 +4230,6 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediap
                 memcpy(pGlobalCtx->yuv, vp->yuv, (vp->width * vp->height * 3) / 2);
                 width = vp->width;
                 height = vp->height;
-                size = (width * height * 3) / 2;
-                pGlobalCtx->width = width;
-                pGlobalCtx->height = height;
 
                 free(vp->yuv);
                 free(vp);
@@ -4254,15 +4237,13 @@ JNIEXPORT void JNICALL Java_com_ring0_ffmpeg_FFmpegHelper_simple_1ffmpeg_1mediap
         }
         pthread_mutex_unlock(pGlobalCtx->mutex);
 
-        if (pGlobalCtx) {
-            if (pGlobalCtx->view_width != pGlobalCtx->width || pGlobalCtx->view_height != pGlobalCtx->height) {
-                pGlobalCtx->view_width  = pGlobalCtx->width;
-                pGlobalCtx->view_height = pGlobalCtx->height;
-                setupShader(pGlobalCtx->width, pGlobalCtx->height);
-            }
-            if (pGlobalCtx->yuv) {
-                setupTexture(pGlobalCtx->yuv, pGlobalCtx->width, pGlobalCtx->height);
-            }
+        if (pGlobalCtx->view_width != width || pGlobalCtx->view_height != height) {
+            pGlobalCtx->view_width = width;
+            pGlobalCtx->view_height = height;
+            setupShader(pGlobalCtx->view_width, pGlobalCtx->view_height);
+        }
+        if (pGlobalCtx->yuv) {
+            setupTexture(pGlobalCtx->yuv, pGlobalCtx->view_width, pGlobalCtx->view_height);
         }
     }
 }
